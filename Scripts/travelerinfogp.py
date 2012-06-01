@@ -3,21 +3,22 @@ Queries the WSDOT Traveler Info REST endpoints and populates a table using the r
 @author: Jeff Jacobson
 
 Parameters:
-0	URL
-1	Workspace
-2	Table (output)
+0	Endpoint Name. valid values are: BorderCrossings, HighwayAlerts, CVRestrictions, HighwayCameras, MountainPassConditions, TrafficFlow, TravelTimes)
+1	Access Code
+2	Workspace.  Optional.  Defaults to "../Scratch/Scratch.gdb".
+3	Table (output)
 '''
-import sys, os, re, datetime, parseutils, travelerinfo, arcpy
+import sys, os, datetime, parseutils, travelerinfo, arcpy
 
-#urls = {
-#	"Border Crossings": "http://www.wsdot.wa.gov/Traffic/api/BorderCrossings/BorderCrossingsREST.svc/GetBorderCrossingsAsJson", 
-#	"Highway Alerts": "http://www.wsdot.wa.gov/Traffic/api/HighwayAlerts/HighwayAlertsREST.svc/GetAlertsAsJson",
-#	"CV Restrictions": "http://www.wsdot.wa.gov/Traffic/api/CVRestrictions/CVRestrictionsREST.svc/GetCommercialVehicleRestrictionsAsJson",
-#	"Cameras": "http://www.wsdot.wa.gov/Traffic/api/HighwayCameras/HighwayCamerasREST.svc/GetCamerasAsJson",
-#	"MountainPassConditions": "Service at http://www.wsdot.wa.gov/Traffic/api/MountainPassConditions/MountainPassConditionsREST.svc/GetMountainPassConditionsAsJson",
-#	"Traffic Flow": "http://www.wsdot.wa.gov/Traffic/api/TrafficFlow/TrafficFlowREST.svc/GetTrafficFlowsAsJson",
-#	"Travel Times": "http://www.wsdot.wa.gov/Traffic/api/TravelTimes/TravelTimesREST.svc/GetTravelTimesAsJson"
-#	}
+urls = {
+	"BorderCrossings": "http://www.wsdot.wa.gov/Traffic/api/BorderCrossings/BorderCrossingsREST.svc/GetBorderCrossingsAsJson", 
+	"HighwayAlerts": "http://www.wsdot.wa.gov/Traffic/api/HighwayAlerts/HighwayAlertsREST.svc/GetAlertsAsJson",
+	"CVRestrictions": "http://www.wsdot.wa.gov/Traffic/api/CVRestrictions/CVRestrictionsREST.svc/GetCommercialVehicleRestrictionsAsJson",
+	"HighwayCameras": "http://www.wsdot.wa.gov/Traffic/api/HighwayCameras/HighwayCamerasREST.svc/GetCamerasAsJson",
+	"MountainPassConditions": "Service at http://www.wsdot.wa.gov/Traffic/api/MountainPassConditions/MountainPassConditionsREST.svc/GetMountainPassConditionsAsJson",
+	"TrafficFlow": "http://www.wsdot.wa.gov/Traffic/api/TrafficFlow/TrafficFlowREST.svc/GetTrafficFlowsAsJson",
+	"TravelTimes": "http://www.wsdot.wa.gov/Traffic/api/TravelTimes/TravelTimesREST.svc/GetTravelTimesAsJson"
+	}
 
 # This dictionary defines the fields in each table.  Each field's dictionary entry can either contain a single string value 
 # indicating the field type, or a dictionary with parameters for the arcpy.management.AddField function 
@@ -188,7 +189,13 @@ fieldsDict = {
 
 
 def createTable(tablePath, fieldDict=None, dataList=None):
-	"""Creates a table 
+	"""Creates a table for one of the Traveler API REST Endpoints' data.
+	@param tablePath: The path where the new table will be created. If this path already exists than the existing table will be truncated.
+	@type tablePath: str
+	@param fieldDict: Optional. A dict that defines the fields that will be created.  If omitted, the fields will be determined by the table path.
+	@type fieldDict: dict
+	@param dataList: Optional. A list of data returned from travelerinfo.getTravelerInfo that will be used to populate the table.
+	@type dataList: list
 	"""
 	# Create the table if it does not already exist.
 	if not arcpy.Exists(tablePath):
@@ -250,26 +257,6 @@ def createTable(tablePath, fieldDict=None, dataList=None):
 def createAlertsTable(tablePath, alertList):
 	createTable(tablePath, fieldsDict["HighwayAlerts"], alertList)
 
-def getDefaultTableName(url):
-	"""Extracts a table name from the URL.
-	"""
-	#urls = {
-#	"Border Crossings": "http://www.wsdot.wa.gov/Traffic/api/BorderCrossings/BorderCrossingsREST.svc/GetBorderCrossingsAsJson", 
-#	"Highway Alerts": "http://www.wsdot.wa.gov/Traffic/api/HighwayAlerts/HighwayAlertsREST.svc/GetAlertsAsJson",
-#	"CV Restrictions": "http://www.wsdot.wa.gov/Traffic/api/CVRestrictions/CVRestrictionsREST.svc/GetCommercialVehicleRestrictionsAsJson",
-#	"Cameras": "http://www.wsdot.wa.gov/Traffic/api/HighwayCameras/HighwayCamerasREST.svc/GetCamerasAsJson",
-#	"MountainPassConditions": "Service at http://www.wsdot.wa.gov/Traffic/api/MountainPassConditions/MountainPassConditionsREST.svc/GetMountainPassConditionsAsJson",
-#	"Traffic Flow": "http://www.wsdot.wa.gov/Traffic/api/TrafficFlow/TrafficFlowREST.svc/GetTrafficFlowsAsJson",
-#	"Travel Times": "http://www.wsdot.wa.gov/Traffic/api/TravelTimes/TravelTimesREST.svc/GetTravelTimesAsJson"
-#	}
-
-	names = ["BorderCrossings", "HighwayAlerts", "CVRestrictions", "HighwayCameras", "MountainPassConditions", 
-			"TrafficFlow", "TravelTimes"]
-	for name in names:
-		if re.search(name, url, re.IGNORECASE):
-			return name
-	raise "Unsupported URL format"
-
 if __name__ == '__main__':
 	argCount = arcpy.GetArgumentCount()
 	if argCount < 1:
@@ -277,11 +264,13 @@ if __name__ == '__main__':
 	
 	else:
 		# Get the URL
-		url = arcpy.GetParameterAsText(0)
+		tableName = arcpy.GetParameterAsText(0)
+		accessCode = arcpy.GetParameterAsText(1)
+		url = "%s?accessCode=%s" % (urls[tableName], accessCode)
 		
 		# Get the workspace path
-		if argCount > 1:
-			workspace = arcpy.GetParameterAsText(1)
+		if argCount > 2:
+			workspace = arcpy.GetParameterAsText(2)
 		else:
 			# get the root directory
 			dirName = os.path.dirname(os.path.dirname(sys.argv[0]))
@@ -292,9 +281,6 @@ if __name__ == '__main__':
 		if not arcpy.Exists(workspace):
 			arcpy.AddError("Workspace does not exist: \"%s\"." % workspace)
 			
-		# Get the table name
-		tableName = getDefaultTableName(url)
-			
 		travelerInfo = travelerinfo.getTravelerInfo(url)
 				
 		tablePath = os.path.join(workspace, tableName)
@@ -304,4 +290,5 @@ if __name__ == '__main__':
 		else:
 			raise NotImplementedError()
 		
-		arcpy.SetParameterAsText(2, tablePath)
+		# Set the table output parameter
+		arcpy.SetParameterAsText(3, tablePath)
