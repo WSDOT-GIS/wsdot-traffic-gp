@@ -5,25 +5,22 @@ Returns data from the WSDOT Traveler Info REST endpoints.
 Parameters:
 1	REST URL
 '''
-import sys, urllib2, json, re, parseutils
+import sys, urllib2, json, parseutils
 
 def parseTravelerInfoObject(dct):
 	"""This method is used by the json.load method to customized how the alerts are deserialized.
 	@type dct: dict 
 	"""
-	timeRe = re.compile("(?:Time)|(?:Date)", re.IGNORECASE)
-	rlocRe = re.compile("\w+(?:(?:Roadway)|(?:BorderCrossing))Location", re.IGNORECASE)
 	output = {}
 	for key in dct:
-		if rlocRe.match(key) and dct[key] is not None:
+		val = dct[key]
+		if isinstance(val, dict):
 			# Roadway locations will be "flattened", since tables can't have nested values.
-			for rlKey in dct[key]:
-				output[key + rlKey] = dct[key][rlKey]
-			pass
-		elif timeRe.search(key):
+			for rlKey in val:
+				output[key + rlKey] = val[rlKey]
+		elif isinstance(val, (str, unicode)):
 			# Parse date/time values.
-			output[key] = parseutils.parseDate(dct[key])
-			pass
+			output[key] = parseutils.parseDate(val) # Either parses into date (if possible) or returns the original string.
 		else:
 			output[key] = dct[key]
 	return output
