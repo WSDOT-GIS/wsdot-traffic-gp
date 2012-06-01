@@ -12,7 +12,7 @@ def parseTravelerInfoObject(dct):
 	@type dct: dict 
 	"""
 	timeRe = re.compile("(?:Time)|(?:Date)", re.IGNORECASE)
-	rlocRe = re.compile("\w+RoadwayLocation", re.IGNORECASE)
+	rlocRe = re.compile("\w+(?:(?:Roadway)|(?:BorderCrossing))Location", re.IGNORECASE)
 	output = {}
 	for key in dct:
 		if rlocRe.match(key) and dct[key] is not None:
