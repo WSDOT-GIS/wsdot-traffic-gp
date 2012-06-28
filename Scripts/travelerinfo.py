@@ -8,7 +8,7 @@ Parameters:
 import sys, urllib2, json, parseutils
 
 def parseTravelerInfoObject(dct):
-	"""This method is used by the json.load method to customized how the alerts are deserialized.
+	"""This method is used by the json.load method to customize how the alerts are deserialized.
 	@type dct: dict 
 	"""
 	output = {}
