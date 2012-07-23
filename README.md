@@ -17,3 +17,6 @@ It can also be imported as a module, providing the ability to query the REST end
 
 ### `travelerinfogp.py` ###
 This is a geoprocessing script that can consume the REST endpoints and return the results as a table.  Can be used as a stand-alone script or imported as a module.
+
+## License ##
+Licensed under the [MIT License](http://www.opensource.org/licenses/MIT)
