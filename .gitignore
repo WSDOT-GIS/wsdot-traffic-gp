@@ -2,3 +2,6 @@
 *.gdb
 .project
 .pydevproject
+*.pyproj
+*.suo
+*.sln

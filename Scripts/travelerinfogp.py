@@ -1,4 +1,4 @@
-'''travelerinfogp
+﻿'''travelerinfogp
 Queries the WSDOT Traveler Info REST endpoints and populates a table using the results.
 @author: Jeff Jacobson
 
@@ -95,6 +95,7 @@ fieldsDict = {
 				"EndRoadwayLocationMilePost": "FLOAT",
 				"EndRoadwayLocationRoadName": "TEXT",
 		
+				"StartTime": "DATE",
 				"EndTime": "DATE",
 				"EventCategory": "TEXT",
 				"EventStatus": "TEXT",
