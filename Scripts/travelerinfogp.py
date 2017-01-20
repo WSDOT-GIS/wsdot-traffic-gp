@@ -11,17 +11,21 @@ Parameters:
 import sys, os, datetime, re, parseutils, travelerinfo, arcpy
 
 urls = {
-	"BorderCrossings": "http://www.wsdot.wa.gov/Traffic/api/BorderCrossings/BorderCrossingsREST.svc/GetBorderCrossingsAsJson", 
-	"HighwayAlerts": "http://www.wsdot.wa.gov/Traffic/api/HighwayAlerts/HighwayAlertsREST.svc/GetAlertsAsJson",
+	"BorderCrossings": "http://www.wsdot.wa.gov/Traffic/api/BorderCrossings/BorderCrossingsREST.svc/GetBorderCrossingsAsJson",
+	"BridgeClearances": "http://www.wsdot.wa.gov/Traffic/api/Bridges/ClearanceREST.svc/GetClearancesAsJson",
 	"CVRestrictions": "http://www.wsdot.wa.gov/Traffic/api/CVRestrictions/CVRestrictionsREST.svc/GetCommercialVehicleRestrictionsAsJson",
+	"HighwayAlerts": "http://www.wsdot.wa.gov/Traffic/api/HighwayAlerts/HighwayAlertsREST.svc/GetAlertsAsJson",
 	"HighwayCameras": "http://www.wsdot.wa.gov/Traffic/api/HighwayCameras/HighwayCamerasREST.svc/GetCamerasAsJson",
 	"MountainPassConditions": "http://www.wsdot.wa.gov/Traffic/api/MountainPassConditions/MountainPassConditionsREST.svc/GetMountainPassConditionsAsJson",
+	"TollRates": "http://www.wsdot.wa.gov/traffic/api/api/tolling",
 	"TrafficFlow": "http://www.wsdot.wa.gov/Traffic/api/TrafficFlow/TrafficFlowREST.svc/GetTrafficFlowsAsJson",
-	"TravelTimes": "http://www.wsdot.wa.gov/Traffic/api/TravelTimes/TravelTimesREST.svc/GetTravelTimesAsJson"
+	"TravelTimes": "http://www.wsdot.wa.gov/Traffic/api/TravelTimes/TravelTimesREST.svc/GetTravelTimesAsJson",
+	"WeatherInformation": "http://www.wsdot.wa.gov/traffic/api/WeatherInformation/WeatherInformationREST.svc/GetCurrentWeatherInformationAsJson",
+	"WeatherStations": "http://wsdot.com/Traffic/api/WeatherStations/WeatherStationsREST.svc/GetCurrentStationsAsJson"
 	}
 
-# This dictionary defines the fields in each table.  Each field's dictionary entry can either contain a single string value 
-# indicating the field type, or a dictionary with parameters for the arcpy.management.AddField function 
+# This dictionary defines the fields in each table.  Each field's dictionary entry can either contain a single string value
+# indicating the field type, or a dictionary with parameters for the arcpy.management.AddField function
 # (excluding in_table and field_name, which are already provided by the dictionary keys).
 fieldsDict = {
 			"BorderCrossings": {
@@ -35,6 +39,30 @@ fieldsDict = {
 							"Time":"DATE",
 							"WaitTime":"SHORT"
 							},
+			"BridgeClearances": {
+				"LocationID": "TEXT", # GUID
+				"StructureID": "TEXT",
+				"StateRouteID": {
+					"field_type": "TEXT",
+					"field_length": "3"
+				},
+				"IsConnector": "SHORT",
+				"BeginLatitude": "DOUBLE",
+				"BeginLongitude": "DOUBLE",
+				"BeginMilePost": "SINGLE",
+				"EndLatitude": "DOUBLE",
+				"EndLongitude": "DOUBLE",
+				"EndMilePost": "SINGLE",
+				"MaximumVerticalClearance": "TEXT",
+				"MaximumVerticalClearanceInches": "LONG",
+				"MinimumVerticalClearance": "TEXT",
+				"MinimumVerticalClearanceInches": "LONG",
+				"LRSRoute": {
+					"field_type": "TEXT",
+					"field_length": "11"
+				},
+				"BridgeName": "TEXT"
+			},
 			"CVRestrictions": {
 							"BLMaxAxle":"LONG",
 							"BridgeName":"TEXT",
@@ -50,19 +78,19 @@ fieldsDict = {
 							"StartRoadwayLocationLongitude":"DOUBLE",
 							"StartRoadwayLocationMilePost":"SINGLE",
 							"StartRoadwayLocationRoadName":"TEXT",
-							
+
 							"EndRoadwayLocationDescription":"TEXT",
 							"EndRoadwayLocationDirection":"TEXT",
 							"EndRoadwayLocationLatitude":"DOUBLE",
 							"EndRoadwayLocationLongitude":"DOUBLE",
 							"EndRoadwayLocationMilePost":"SINGLE",
 							"EndRoadwayLocationRoadName":"TEXT",
-							
+
 							"IsDetourAvailable":"SHORT",
 							"IsExceptionsAllowed":"SHORT",
 							"IsPermanentRestriction":"SHORT",
 							"IsWarning":"SHORT",
-							
+
 							"Latitude":"DOUBLE",
 							"Longitude":"DOUBLE",
 							"LocationDescription":"TEXT",
@@ -70,7 +98,7 @@ fieldsDict = {
 							"MaximumGrossVehicleWeightInPounds":"LONG",
 							"RestrictionComment": {
 												"field_type": "TEXT",
-												"field_length": 550
+												"field_length": 800
 												},
 							"RestrictionHeightInInches":"LONG",
 							"RestrictionLengthInInches":"LONG",
@@ -87,14 +115,14 @@ fieldsDict = {
 			"HighwayAlerts": {
 				"AlertID": "LONG",
 				"County": "TEXT",
-				
+
 				"EndRoadwayLocationDescription": "TEXT",
 				"EndRoadwayLocationDirection": "TEXT",
 				"EndRoadwayLocationLatitude": "DOUBLE",
 				"EndRoadwayLocationLongitude": "DOUBLE",
 				"EndRoadwayLocationMilePost": "FLOAT",
 				"EndRoadwayLocationRoadName": "TEXT",
-		
+
 				"StartTime": "DATE",
 				"EndTime": "DATE",
 				"EventCategory": "TEXT",
@@ -113,7 +141,7 @@ fieldsDict = {
 							"field_length": 7
 							},
 				"Region": "TEXT",
-				
+
 				"StartRoadwayLocationDescription": "TEXT",
 				"StartRoadwayLocationDirection": "TEXT",
 				"StartRoadwayLocationLatitude": "DOUBLE",
@@ -158,6 +186,22 @@ fieldsDict = {
 				"TravelAdvisoryActive":"SHORT",
 				"WeatherCondition":"TEXT"
 			},
+			"TollRates": {
+				"SignName": "TEXT",
+				"TripName": "TEXT",
+				"CurrentToll": "SHORT",
+				"CurrentMessage": "TEXT",
+				"StateRoute": "TEXT",
+				"TravelDirection": "TEXT",
+				"StartMilepost": "SINGLE",
+				"StartLocationName": "TEXT",
+				"StartLatitude": "DOUBLE",
+				"StartLongitude": "DOUBLE",
+				"EndMilepost": "SINGLE",
+				"EndLocationName": "TEXT",
+				"EndLatitude": "DOUBLE",
+				"EndLongitude": "DOUBLE"
+			},
 			"TrafficFlow": {
 				"FlowDataID":"LONG",
 				"FlowReadingValue":"SHORT",
@@ -191,6 +235,29 @@ fieldsDict = {
 				"Name":"TEXT",
 				"TimeUpdated":"DATE",
 				"TravelTimeID":"LONG"
+			},
+			"WeatherInformation": {
+				"StationID": "LONG",
+				"StationName": "TEXT",
+				"Latitude": "DOUBLE",
+				"Longitude": "DOUBLE",
+				"ReadingTime": "DATE",
+				"TemperatureInFahrenheit": "DOUBLE",
+				"PrecipitationInInches": "DOUBLE",
+				"WindSpeedInMPH": "DOUBLE",
+				"WindGustSpeedInMPH": "DOUBLE",
+				"Visibility": "SHORT",
+				"SkyCoverage": "TEXT",
+				"BarometricPressure": "DOUBLE",
+				"RelativeHumidity": "DOUBLE",
+				"WindDirectionCardinal": "TEXT",
+				"WindDirection": "DOUBLE"
+			},
+			"WeatherStations": {
+				"StationCode": "LONG",
+				"StationName": "TEXT",
+				"Latitude": "DOUBLE",
+				"Longitude": "DOUBLE"
 			}
 		}
 
@@ -209,13 +276,13 @@ def createTable(tablePath, fieldDict=None, dataList=None, templatesWorkspace=Non
 	tableName = os.path.split(tablePath)[1]
 	# Create the table if it does not already exist.
 	if not arcpy.Exists(tablePath):
-		# Check to see if the fieldDict parameter was provided.  If not, get the fields from the fieldsDict based on 
+		# Check to see if the fieldDict parameter was provided.  If not, get the fields from the fieldsDict based on
 		# the table name in tablePath.
 		if fieldDict is None:
 			fieldDict = fieldsDict[tableName]
 
 		arcpy.AddMessage("Creating table \"%s\"" % tablePath)
-		
+
 		if templatesWorkspace is not None and arcpy.Exists(os.path.join(templatesWorkspace, tableName)):
 			templatePath = os.path.join(templatesWorkspace, tableName)
 			arcpy.AddMessage("Creating table %s using template %s..." % (tablePath, templatePath))
@@ -224,7 +291,7 @@ def createTable(tablePath, fieldDict=None, dataList=None, templatesWorkspace=Non
 			arcpy.AddMessage("Creating table %s..." % tablePath)
 			arcpy.AddWarning("Creating table without a template.  Table creation would be faster if using a template.")
 			arcpy.management.CreateTable(*os.path.split(tablePath))
-			
+
 			arcpy.AddMessage("Adding fields...")
 			# Add the columns
 			for key in fieldDict:
@@ -241,7 +308,7 @@ def createTable(tablePath, fieldDict=None, dataList=None, templatesWorkspace=Non
 		arcpy.AddMessage("Truncating table %s..." % tablePath)
 		# Truncate the table if it already exists
 		arcpy.management.DeleteRows(tablePath)
-	
+
 	if (dataList is not None):
 		badValueRe = re.compile("^(?P<error>.+) \[(?P<field>\w+)\]$",re.MULTILINE)
 		arcpy.AddMessage("Adding data to table...")
@@ -292,36 +359,36 @@ if __name__ == '__main__':
 	argCount = arcpy.GetArgumentCount()
 	if argCount < 1:
 		arcpy.AddError("You must specify your traveler api URL (including access code).")
-	
+
 	else:
 		# Get the URL
 		tableName = arcpy.GetParameterAsText(0)
 		accessCode = arcpy.GetParameterAsText(1)
 		url = "%s?accessCode=%s" % (urls[tableName], accessCode)
-		
+
 		# get the root directory
 		dirName = os.path.dirname(os.path.dirname(sys.argv[0]))
-		
+
 		# Get the workspace path
 		if argCount > 2:
 			workspace = arcpy.GetParameterAsText(2)
 		else:
 			workspace = os.path.join(dirName, "Scratch", "Scratch.gdb")
 		arcpy.AddMessage("Workspace is %s." % workspace)
-		
+
 		templatesGdbPath = os.path.join(dirName, "Data", "Templates.gdb")
 		if not arcpy.Exists(templatesGdbPath):
 			templatesGdbPath = None
-			
+
 		# Throw an error if the workspace does not exist
 		if not arcpy.Exists(workspace):
 			arcpy.AddError("Workspace does not exist: \"%s\"." % workspace)
-			
+
 		travelerInfo = travelerinfo.getTravelerInfo(url)
-				
+
 		tablePath = os.path.join(workspace, tableName)
-		
+
 		createTable(tablePath, dataList=travelerInfo, templatesWorkspace=templatesGdbPath)
-		
+
 		# Set the table output parameter
 		arcpy.SetParameterAsText(3, tablePath)
