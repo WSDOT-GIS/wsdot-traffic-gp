@@ -3,6 +3,8 @@ wsdot-traffic-gp
 
 The scripts in this repository can be used to consume [WSDOT Traveler Information API](http://wsdot.wa.gov/Traffic/api/) REST endpoints in [ArcGIS](http://resources.arcgis.com/) software.
 
+[![Build Status](https://travis-ci.org/WSDOT-GIS/wsdot-traffic-gp.svg?branch=master)](https://travis-ci.org/WSDOT-GIS/wsdot-traffic-gp)
+
 Setup
 -----
 Before using `travelerinfogp.py` you should run the `createtemplates.py` script.  This will create the `Data\Templates.gdb` file geodatabase.
