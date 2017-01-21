@@ -9,20 +9,7 @@ Parameters:
 3	Table (output)
 '''
 import sys, os, datetime, re, parseutils, travelerinfo, arcpy
-
-urls = {
-	"BorderCrossings": "http://www.wsdot.wa.gov/Traffic/api/BorderCrossings/BorderCrossingsREST.svc/GetBorderCrossingsAsJson",
-	"BridgeClearances": "http://www.wsdot.wa.gov/Traffic/api/Bridges/ClearanceREST.svc/GetClearancesAsJson",
-	"CVRestrictions": "http://www.wsdot.wa.gov/Traffic/api/CVRestrictions/CVRestrictionsREST.svc/GetCommercialVehicleRestrictionsAsJson",
-	"HighwayAlerts": "http://www.wsdot.wa.gov/Traffic/api/HighwayAlerts/HighwayAlertsREST.svc/GetAlertsAsJson",
-	"HighwayCameras": "http://www.wsdot.wa.gov/Traffic/api/HighwayCameras/HighwayCamerasREST.svc/GetCamerasAsJson",
-	"MountainPassConditions": "http://www.wsdot.wa.gov/Traffic/api/MountainPassConditions/MountainPassConditionsREST.svc/GetMountainPassConditionsAsJson",
-	"TollRates": "http://www.wsdot.wa.gov/traffic/api/api/tolling",
-	"TrafficFlow": "http://www.wsdot.wa.gov/Traffic/api/TrafficFlow/TrafficFlowREST.svc/GetTrafficFlowsAsJson",
-	"TravelTimes": "http://www.wsdot.wa.gov/Traffic/api/TravelTimes/TravelTimesREST.svc/GetTravelTimesAsJson",
-	"WeatherInformation": "http://www.wsdot.wa.gov/traffic/api/WeatherInformation/WeatherInformationREST.svc/GetCurrentWeatherInformationAsJson",
-	"WeatherStations": "http://wsdot.com/Traffic/api/WeatherStations/WeatherStationsREST.svc/GetCurrentStationsAsJson"
-	}
+from resturls import urls
 
 # This dictionary defines the fields in each table.  Each field's dictionary entry can either contain a single string value
 # indicating the field type, or a dictionary with parameters for the arcpy.management.AddField function
@@ -40,7 +27,7 @@ fieldsDict = {
 							"WaitTime":"SHORT"
 							},
 			"BridgeClearances": {
-				"LocationID": "TEXT", # GUID
+				"LocationID": "GUID",
 				"StructureID": "TEXT",
 				"StateRouteID": {
 					"field_type": "TEXT",
@@ -363,8 +350,10 @@ if __name__ == '__main__':
 	else:
 		# Get the URL
 		tableName = arcpy.GetParameterAsText(0)
-		accessCode = arcpy.GetParameterAsText(1)
-		url = "%s?accessCode=%s" % (urls[tableName], accessCode)
+		if argCount >= 2:
+			accessCode = arcpy.GetParameterAsText(1)
+		else:
+			accessCode = None
 
 		# get the root directory
 		dirName = os.path.dirname(os.path.dirname(sys.argv[0]))
@@ -373,7 +362,7 @@ if __name__ == '__main__':
 		if argCount > 2:
 			workspace = arcpy.GetParameterAsText(2)
 		else:
-			workspace = os.path.join(dirName, "Scratch", "Scratch.gdb")
+			workspace = arcpy.env.scratchGDB
 		arcpy.AddMessage("Workspace is %s." % workspace)
 
 		templatesGdbPath = os.path.join(dirName, "Data", "Templates.gdb")
@@ -384,8 +373,10 @@ if __name__ == '__main__':
 		if not arcpy.Exists(workspace):
 			arcpy.AddError("Workspace does not exist: \"%s\"." % workspace)
 
-		travelerInfo = travelerinfo.getTravelerInfo(url)
-
+		if accessCode is not None:
+			travelerInfo = travelerinfo.getTravelerInfo(tableName, accessCode)
+		else:
+			travelerInfo = travelerinfo.getTravelerInfo(tableName)
 		tablePath = os.path.join(workspace, tableName)
 
 		createTable(tablePath, dataList=travelerInfo, templatesWorkspace=templatesGdbPath)

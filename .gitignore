@@ -1,4 +1,5 @@
 .vscode
+accesscode.txt
 *.pyc
 *.gdb
 .project
