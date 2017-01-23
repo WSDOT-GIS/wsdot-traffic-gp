@@ -4,7 +4,6 @@ wsdot-traffic-gp
 The scripts in this repository can be used to consume [WSDOT Traveler Information API](http://wsdot.wa.gov/Traffic/api/) REST endpoints in [ArcGIS](http://resources.arcgis.com/) software.
 
 [![Build Status](https://travis-ci.org/WSDOT-GIS/wsdot-traffic-gp.svg?branch=master)](https://travis-ci.org/WSDOT-GIS/wsdot-traffic-gp)
-[![GitHub issues](https://img.shields.io/github/issues/WSDOT-GIS/wsdot-traffic-gp/shields.svg)](https://github.com/WSDOT-GIS/wsdot-traffic-gp/issues)
 
 Setup
 -----
