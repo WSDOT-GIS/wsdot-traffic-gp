@@ -1,4 +1,4 @@
-﻿'''travelerinfogp
+'''travelerinfogp
 Queries the WSDOT Traveler Info REST endpoints and populates a table using the results.
 @author: Jeff Jacobson
 
@@ -11,240 +11,271 @@ Parameters:
 import sys, os, datetime, re, parseutils, travelerinfo, arcpy
 from resturls import urls
 
+# point_table_names = (
+#     "BorderCrossings",
+#     "HighwayCameras",
+#     "MountainPassConditions",
+#     "TrafficFlow",
+#     "WeatherInformation",
+#     "WeatherStations"
+# )
+
 # This dictionary defines the fields in each table.  Each field's dictionary entry can either contain a single string value
 # indicating the field type, or a dictionary with parameters for the arcpy.management.AddField function
 # (excluding in_table and field_name, which are already provided by the dictionary keys).
 fieldsDict = {
     "BorderCrossings": {
-        "BorderCrossingLocationDescription": "TEXT",
-        "BorderCrossingLocationDirection": "TEXT",
-        "BorderCrossingLocationLatitude": "DOUBLE",
-        "BorderCrossingLocationLongitude": "DOUBLE",
-        "BorderCrossingLocationMilePost": "SINGLE",
-        "BorderCrossingLocationRoadName": "TEXT",
-        "CrossingName":"TEXT",
-        "Time":"DATE",
-        "WaitTime":"SHORT"
+        "fields": {
+            "Description": "TEXT",
+            "Direction": "TEXT",
+            "Latitude": "DOUBLE",
+            "Longitude": "DOUBLE",
+            "MilePost": "SINGLE",
+            "RoadName": "TEXT",
+            "CrossingName":"TEXT",
+            "Time":"DATE",
+            "WaitTime":"SHORT"
+        }
     },
     "BridgeClearances": {
-        "LocationID": "GUID",
-        "StructureID": "TEXT",
-        "StateRouteID": {
-            "field_type": "TEXT",
-            "field_length": "3"
-        },
-        "IsConnector": "SHORT",
-        "BeginLatitude": "DOUBLE",
-        "BeginLongitude": "DOUBLE",
-        "BeginMilePost": "SINGLE",
-        "EndLatitude": "DOUBLE",
-        "EndLongitude": "DOUBLE",
-        "EndMilePost": "SINGLE",
-        "MaximumVerticalClearance": "TEXT",
-        "MaximumVerticalClearanceInches": "LONG",
-        "MinimumVerticalClearance": "TEXT",
-        "MinimumVerticalClearanceInches": "LONG",
-        "LRSRoute": {
-            "field_type": "TEXT",
-            "field_length": "11"
-        },
-        "BridgeName": "TEXT"
+        "fields": {
+            "LocationID": "GUID",
+            "StructureID": "TEXT",
+            "StateRouteID": {
+                "field_type": "TEXT",
+                "field_length": "3"
+            },
+            "IsConnector": "SHORT",
+            "BeginLatitude": "DOUBLE",
+            "BeginLongitude": "DOUBLE",
+            "BeginMilePost": "SINGLE",
+            "EndLatitude": "DOUBLE",
+            "EndLongitude": "DOUBLE",
+            "EndMilePost": "SINGLE",
+            "MaximumVerticalClearance": "TEXT",
+            "MaximumVerticalClearanceInches": "LONG",
+            "MinimumVerticalClearance": "TEXT",
+            "MinimumVerticalClearanceInches": "LONG",
+            "LRSRoute": {
+                "field_type": "TEXT",
+                "field_length": "11"
+            },
+            "BridgeName": "TEXT"
+        }
     },
     "CVRestrictions": {
-        "BLMaxAxle":"LONG",
-        "BridgeName":"TEXT",
-        "BridgeNumber":"TEXT",
-        "CL8MaxAxle":"LONG",
-        "DateEffective":"DATE",
-        "DateExpires":"DATE",
-        "DatePosted":"DATE",
+        "fields": {
+            "BLMaxAxle":"LONG",
+            "BridgeName":"TEXT",
+            "BridgeNumber":"TEXT",
+            "CL8MaxAxle":"LONG",
+            "DateEffective":"DATE",
+            "DateExpires":"DATE",
+            "DatePosted":"DATE",
 
-        "StartRoadwayLocationDescription":"TEXT",
-        "StartRoadwayLocationDirection":"TEXT",
-        "StartRoadwayLocationLatitude":"DOUBLE",
-        "StartRoadwayLocationLongitude":"DOUBLE",
-        "StartRoadwayLocationMilePost":"SINGLE",
-        "StartRoadwayLocationRoadName":"TEXT",
+            "StartRoadwayLocationDescription":"TEXT",
+            "StartRoadwayLocationDirection":"TEXT",
+            "StartRoadwayLocationLatitude":"DOUBLE",
+            "StartRoadwayLocationLongitude":"DOUBLE",
+            "StartRoadwayLocationMilePost":"SINGLE",
+            "StartRoadwayLocationRoadName":"TEXT",
 
-        "EndRoadwayLocationDescription":"TEXT",
-        "EndRoadwayLocationDirection":"TEXT",
-        "EndRoadwayLocationLatitude":"DOUBLE",
-        "EndRoadwayLocationLongitude":"DOUBLE",
-        "EndRoadwayLocationMilePost":"SINGLE",
-        "EndRoadwayLocationRoadName":"TEXT",
+            "EndRoadwayLocationDescription":"TEXT",
+            "EndRoadwayLocationDirection":"TEXT",
+            "EndRoadwayLocationLatitude":"DOUBLE",
+            "EndRoadwayLocationLongitude":"DOUBLE",
+            "EndRoadwayLocationMilePost":"SINGLE",
+            "EndRoadwayLocationRoadName":"TEXT",
 
-        "IsDetourAvailable":"SHORT",
-        "IsExceptionsAllowed":"SHORT",
-        "IsPermanentRestriction":"SHORT",
-        "IsWarning":"SHORT",
+            "IsDetourAvailable":"SHORT",
+            "IsExceptionsAllowed":"SHORT",
+            "IsPermanentRestriction":"SHORT",
+            "IsWarning":"SHORT",
 
-        "Latitude":"DOUBLE",
-        "Longitude":"DOUBLE",
-        "LocationDescription":"TEXT",
-        "LocationName":"TEXT",
-        "MaximumGrossVehicleWeightInPounds":"LONG",
-        "RestrictionComment": {
-                            "field_type": "TEXT",
-                            "field_length": 800
-                            },
-        "RestrictionHeightInInches":"LONG",
-        "RestrictionLengthInInches":"LONG",
-        "RestrictionType":"SHORT", # "BridgeRestriction" or "RoadRestriction"
-        "RestrictionWeightInPounds":"LONG",
-        "RestrictionWidthInInches":"LONG",
-        "SAMaxAxle":"LONG",
+            "Latitude":"DOUBLE",
+            "Longitude":"DOUBLE",
+            "LocationDescription":"TEXT",
+            "LocationName":"TEXT",
+            "MaximumGrossVehicleWeightInPounds":"LONG",
+            "RestrictionComment": {
+                                "field_type": "TEXT",
+                                "field_length": 800
+                                },
+            "RestrictionHeightInInches":"LONG",
+            "RestrictionLengthInInches":"LONG",
+            "RestrictionType":"SHORT", # "BridgeRestriction" or "RoadRestriction"
+            "RestrictionWeightInPounds":"LONG",
+            "RestrictionWidthInInches":"LONG",
+            "SAMaxAxle":"LONG",
 
-        "State":"TEXT",
-        "StateRouteID":"TEXT",
-        "TDMaxAxle":"LONG",
-        "VehicleType":"TEXT"
+            "State":"TEXT",
+            "StateRouteID":"TEXT",
+            "TDMaxAxle":"LONG",
+            "VehicleType":"TEXT"
+        }
     },
     "HighwayAlerts": {
-        "AlertID": "LONG",
-        "County": "TEXT",
+        "fields": {
+            "AlertID": "LONG",
+            "County": "TEXT",
 
-        "EndRoadwayLocationDescription": "TEXT",
-        "EndRoadwayLocationDirection": "TEXT",
-        "EndRoadwayLocationLatitude": "DOUBLE",
-        "EndRoadwayLocationLongitude": "DOUBLE",
-        "EndRoadwayLocationMilePost": "FLOAT",
-        "EndRoadwayLocationRoadName": "TEXT",
+            "EndRoadwayLocationDescription": "TEXT",
+            "EndRoadwayLocationDirection": "TEXT",
+            "EndRoadwayLocationLatitude": "DOUBLE",
+            "EndRoadwayLocationLongitude": "DOUBLE",
+            "EndRoadwayLocationMilePost": "FLOAT",
+            "EndRoadwayLocationRoadName": "TEXT",
 
-        "StartTime": "DATE",
-        "EndTime": "DATE",
-        "EventCategory": "TEXT",
-        "EventStatus": "TEXT",
-        "ExtendedDescription": {
-            "field_type":"TEXT",
-            "field_length": 1500
-        },
-        "HeadlineDescription": {
-            "field_type":"TEXT",
-            "field_length": 500
-        },
-        "LastUpdatedTime": "DATE",
-        "Priority": {
-            "field_type": "TEXT",
-            "field_length": 7
-        },
-        "Region": "TEXT",
+            "StartTime": "DATE",
+            "EndTime": "DATE",
+            "EventCategory": "TEXT",
+            "EventStatus": "TEXT",
+            "ExtendedDescription": {
+                "field_type":"TEXT",
+                "field_length": 1500
+            },
+            "HeadlineDescription": {
+                "field_type":"TEXT",
+                "field_length": 500
+            },
+            "LastUpdatedTime": "DATE",
+            "Priority": {
+                "field_type": "TEXT",
+                "field_length": 7
+            },
+            "Region": "TEXT",
 
-        "StartRoadwayLocationDescription": "TEXT",
-        "StartRoadwayLocationDirection": "TEXT",
-        "StartRoadwayLocationLatitude": "DOUBLE",
-        "StartRoadwayLocationLongitude": "DOUBLE",
-        "StartRoadwayLocationMilePost": "FLOAT",
-        "StartRoadwayLocationRoadName": "TEXT"
+            "StartRoadwayLocationDescription": "TEXT",
+            "StartRoadwayLocationDirection": "TEXT",
+            "StartRoadwayLocationLatitude": "DOUBLE",
+            "StartRoadwayLocationLongitude": "DOUBLE",
+            "StartRoadwayLocationMilePost": "FLOAT",
+            "StartRoadwayLocationRoadName": "TEXT"
+        }
     },
     "HighwayCameras": {
-        "CameraID":"LONG",
-        "CameraLocationDescription":"TEXT",
-        "CameraLocationDirection":"TEXT",
-        "CameraLocationLatitude":"DOUBLE",
-        "CameraLocationLongitude":"DOUBLE",
-        "CameraLocationMilePost":"DOUBLE",
-        "CameraLocationRoadName":"TEXT",
-        "CameraOwner":"TEXT",
-        "Description":"TEXT",
-        "DisplayLatitude":"DOUBLE",
-        "DisplayLongitude":"DOUBLE",
-        "ImageHeight":"SHORT",
-        "ImageURL":"TEXT",
-        "ImageWidth":"SHORT",
-        "IsActive":"SHORT",
-        "OwnerURL":"TEXT",
-        "Region":"TEXT",
-        "SortOrder":"SHORT",
-        "Title":"TEXT"
+        "fields": {
+            "CameraID":"LONG",
+            "Description":"TEXT",
+            "Direction":"TEXT",
+            "Latitude":"DOUBLE",
+            "Longitude":"DOUBLE",
+            "MilePost":"DOUBLE",
+            "RoadName":"TEXT",
+            "CameraOwner":"TEXT",
+            "Description":"TEXT",
+            "DisplayLatitude":"DOUBLE",
+            "DisplayLongitude":"DOUBLE",
+            "ImageHeight":"SHORT",
+            "ImageURL":"TEXT",
+            "ImageWidth":"SHORT",
+            "IsActive":"SHORT",
+            "OwnerURL":"TEXT",
+            "Region":"TEXT",
+            "SortOrder":"SHORT",
+            "Title":"TEXT"
+        }
     },
     "MountainPassConditions": {
-        "DateUpdated":"DATE",
-        "ElevationInFeet":"LONG",
-        "Latitude":"DOUBLE",
-        "Longitude":"DOUBLE",
-        "MountainPassId":"LONG",
-        "MountainPassName":"TEXT",
-        "RestrictionOneRestrictionText":"TEXT",
-        "RestrictionOneTravelDirection":"TEXT",
-        "RestrictionTwoRestrictionText":"TEXT",
-        "RestrictionTwoTravelDirection":"TEXT",
-        "RoadCondition":"TEXT",
-        "TemperatureInFahrenheit":"SHORT",
-        "TravelAdvisoryActive":"SHORT",
-        "WeatherCondition":"TEXT"
+        "fields": {
+            "DateUpdated":"DATE",
+            "ElevationInFeet":"LONG",
+            "Latitude":"DOUBLE",
+            "Longitude":"DOUBLE",
+            "MountainPassId":"LONG",
+            "MountainPassName":"TEXT",
+            "RestrictionOneRestrictionText":"TEXT",
+            "RestrictionOneTravelDirection":"TEXT",
+            "RestrictionTwoRestrictionText":"TEXT",
+            "RestrictionTwoTravelDirection":"TEXT",
+            "RoadCondition":"TEXT",
+            "TemperatureInFahrenheit":"SHORT",
+            "TravelAdvisoryActive":"SHORT",
+            "WeatherCondition":"TEXT"
+        }
     },
     "TollRates": {
-        "SignName": "TEXT",
-        "TripName": "TEXT",
-        "CurrentToll": "SHORT",
-        "CurrentMessage": "TEXT",
-        "StateRoute": "TEXT",
-        "TravelDirection": "TEXT",
-        "StartMilepost": "SINGLE",
-        "StartLocationName": "TEXT",
-        "StartLatitude": "DOUBLE",
-        "StartLongitude": "DOUBLE",
-        "EndMilepost": "SINGLE",
-        "EndLocationName": "TEXT",
-        "EndLatitude": "DOUBLE",
-        "EndLongitude": "DOUBLE"
+        "fields": {
+            "SignName": "TEXT",
+            "TripName": "TEXT",
+            "CurrentToll": "SHORT",
+            "CurrentMessage": "TEXT",
+            "StateRoute": "TEXT",
+            "TravelDirection": "TEXT",
+            "StartMilepost": "SINGLE",
+            "StartLocationName": "TEXT",
+            "StartLatitude": "DOUBLE",
+            "StartLongitude": "DOUBLE",
+            "EndMilepost": "SINGLE",
+            "EndLocationName": "TEXT",
+            "EndLatitude": "DOUBLE",
+            "EndLongitude": "DOUBLE"
+        }
     },
     "TrafficFlow": {
-        "FlowDataID":"LONG",
-        "FlowReadingValue":"SHORT",
-        "FlowStationLocationDescription":"TEXT",
-        "FlowStationLocationDirection":"TEXT",
-        "FlowStationLocationLatitude":"DOUBLE",
-        "FlowStationLocationLongitude":"DOUBLE",
-        "FlowStationLocationMilePost":"FLOAT",
-        "FlowStationLocationRoadName":"TEXT",
-        "Region":"TEXT",
-        "StationName":"TEXT",
-        "Time":"DATE"
+        "fields": {
+            "FlowDataID":"LONG",
+            "FlowReadingValue":"SHORT",
+            "Description":"TEXT",
+            "Direction":"TEXT",
+            "Latitude":"DOUBLE",
+            "Longitude":"DOUBLE",
+            "MilePost":"FLOAT",
+            "RoadName":"TEXT",
+            "Region":"TEXT",
+            "StationName":"TEXT",
+            "Time":"DATE"
+        }
     },
     "TravelTimes": {
-        "AverageTime":"LONG",
-        "CurrentTime":"LONG",
-        "Description":"TEXT",
-        "Distance":"DOUBLE",
-        "StartPointDescription":"TEXT",
-        "StartPointDirection":"TEXT",
-        "StartPointLatitude":"DOUBLE",
-        "StartPointLongitude":"DOUBLE",
-        "StartPointMilePost":"FLOAT",
-        "StartPointRoadName":"TEXT",
-        "EndPointDescription":"TEXT",
-        "EndPointDirection":"TEXT",
-        "EndPointLatitude":"DOUBLE",
-        "EndPointLongitude":"DOUBLE",
-        "EndPointMilePost":"FLOAT",
-        "EndPointRoadName":"TEXT",
-        "Name":"TEXT",
-        "TimeUpdated":"DATE",
-        "TravelTimeID":"LONG"
+        "fields": {
+            "AverageTime":"LONG",
+            "CurrentTime":"LONG",
+            "Description":"TEXT",
+            "Distance":"DOUBLE",
+            "StartPointDescription":"TEXT",
+            "StartPointDirection":"TEXT",
+            "StartPointLatitude":"DOUBLE",
+            "StartPointLongitude":"DOUBLE",
+            "StartPointMilePost":"FLOAT",
+            "StartPointRoadName":"TEXT",
+            "EndPointDescription":"TEXT",
+            "EndPointDirection":"TEXT",
+            "EndPointLatitude":"DOUBLE",
+            "EndPointLongitude":"DOUBLE",
+            "EndPointMilePost":"FLOAT",
+            "EndPointRoadName":"TEXT",
+            "Name":"TEXT",
+            "TimeUpdated":"DATE",
+            "TravelTimeID":"LONG"
+        }
     },
     "WeatherInformation": {
-        "StationID": "LONG",
-        "StationName": "TEXT",
-        "Latitude": "DOUBLE",
-        "Longitude": "DOUBLE",
-        "ReadingTime": "DATE",
-        "TemperatureInFahrenheit": "DOUBLE",
-        "PrecipitationInInches": "DOUBLE",
-        "WindSpeedInMPH": "DOUBLE",
-        "WindGustSpeedInMPH": "DOUBLE",
-        "Visibility": "SHORT",
-        "SkyCoverage": "TEXT",
-        "BarometricPressure": "DOUBLE",
-        "RelativeHumidity": "DOUBLE",
-        "WindDirectionCardinal": "TEXT",
-        "WindDirection": "DOUBLE"
+        "fields": {
+            "StationID": "LONG",
+            "StationName": "TEXT",
+            "Latitude": "DOUBLE",
+            "Longitude": "DOUBLE",
+            "ReadingTime": "DATE",
+            "TemperatureInFahrenheit": "DOUBLE",
+            "PrecipitationInInches": "DOUBLE",
+            "WindSpeedInMPH": "DOUBLE",
+            "WindGustSpeedInMPH": "DOUBLE",
+            "Visibility": "SHORT",
+            "SkyCoverage": "TEXT",
+            "BarometricPressure": "DOUBLE",
+            "RelativeHumidity": "DOUBLE",
+            "WindDirectionCardinal": "TEXT",
+            "WindDirection": "DOUBLE"
+        }
     },
     "WeatherStations": {
-        "StationCode": "LONG",
-        "StationName": "TEXT",
-        "Latitude": "DOUBLE",
-        "Longitude": "DOUBLE"
+        "fields": {
+            "StationCode": "LONG",
+            "StationName": "TEXT",
+            "Latitude": "DOUBLE",
+            "Longitude": "DOUBLE"
+        }
     }
 }
 
@@ -266,7 +297,7 @@ def createTable(tablePath, fieldDict=None, dataList=None, templatesWorkspace=Non
         # Check to see if the fieldDict parameter was provided.  If not, get the fields from the fieldsDict based on
         # the table name in tablePath.
         if fieldDict is None:
-            fieldDict = fieldsDict[tableName]
+            fieldDict = fieldsDict[tableName]["fields"]
 
         arcpy.AddMessage("Creating table \"%s\"" % tablePath)
 
@@ -285,7 +316,8 @@ def createTable(tablePath, fieldDict=None, dataList=None, templatesWorkspace=Non
                 try:
                     val = fieldDict[key]
                     if (type(val) == dict):
-                        val["field_alias"] = parseutils.splitCamelCase(key)
+                        if "field_alias" not in val:
+                            val["field_alias"] = parseutils.splitCamelCase(key)
                         arcpy.management.AddField(tablePath, key, **val)
                     else:
                         arcpy.management.AddField(tablePath, key, val, field_alias = parseutils.splitCamelCase(key))
@@ -309,7 +341,7 @@ def createTable(tablePath, fieldDict=None, dataList=None, templatesWorkspace=Non
                     if val is not None:
                         try:
                             if isinstance(val, datetime.datetime):
-                                row.setValue(key, str(val))
+                                row.setValue(key, val.strftime("%c"))
                             elif isinstance(val, bool):
                                 if val:
                                     row.setValue(key, 1)

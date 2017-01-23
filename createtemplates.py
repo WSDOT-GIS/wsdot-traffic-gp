@@ -9,8 +9,7 @@ from os import path
 
 if __name__ == '__main__':
     # Get the .. directory
-    rootDir = path.dirname(path.dirname(sys.argv[0]))
-    dataDir = path.join(rootDir, "Data")
+    dataDir = path.abspath("Data")
 
     # Create the data dir if it does not exist already.
     if not path.exists(dataDir):
@@ -27,5 +26,5 @@ if __name__ == '__main__':
     arcpy.management.CreateFileGDB(dataDir, gdbName)
     for key in travelerinfogp.fieldsDict:
         arcpy.AddMessage("Creating %s in %s..." % (key, gdbPath))
-        travelerinfogp.createTable(path.join(gdbPath, key), travelerinfogp.fieldsDict[key])
+        travelerinfogp.createTable(path.join(gdbPath, key))
     arcpy.AddMessage("Completed")

@@ -1,6 +1,9 @@
 '''Utilities for parsing strings into other types.
 '''
-import datetime, re
+import datetime
+import re
+import pytz
+
 
 dateRe = re.compile(r"\/Date\((\d+)([+\-]\d+)\)\/",re.IGNORECASE)
 camelCaseRe = re.compile(r"(?:[A-Z][a-z]+)|[A-Z]{2}")
@@ -20,7 +23,7 @@ def parseDate(wcfDate):
                 ticks = (int(groups[0]) + int(groups[1])) / 1000
             else:
                 ticks = int(groups[0]) / 1000
-            return datetime.datetime.fromtimestamp(ticks)
+            return datetime.datetime.fromtimestamp(ticks, pytz.timezone('US/Pacific'))
         else:
             return wcfDate
 
