@@ -331,26 +331,16 @@ def createTable(tablePath, fieldDict=None, dataList=None, templatesWorkspace=Non
     if (dataList is not None):
         badValueRe = re.compile("^(?P<error>.+) \[(?P<field>\w+)\]$",re.MULTILINE)
         arcpy.AddMessage("Adding data to table...")
-        cursor = arcpy.InsertCursor(tablePath)
-        row = None
-        try:
+        fields = list(fieldDict.keys())
+        with arcpy.da.InsertCursor(tablePath, fields) as cursor:
             for item in dataList:
-                row = cursor.newRow()
-                for key in item:
-                    val = item[key]
-                    if val is not None:
-                        try:
-                            if isinstance(val, datetime.datetime):
-                                row.setValue(key, val.strftime("%c"))
-                            elif isinstance(val, bool):
-                                if val:
-                                    row.setValue(key, 1)
-                                else:
-                                    row.setValue(key, 0)
-                            else:
-                                row.setValue(key, val)
-                        except (ValueError, RuntimeError) as errInst:
-                            arcpy.AddWarning("Error adding value %s to field %s.\n%s" % (val, key, errInst))
+                row = []
+                for key in fields: #key in item:
+                    if not key in item:
+                        row.append(None)
+                    else:
+                        val = item[key]
+                        row.append(val)
                 try:
                     cursor.insertRow(row)
                 except RuntimeError as errInst:
@@ -368,16 +358,11 @@ def createTable(tablePath, fieldDict=None, dataList=None, templatesWorkspace=Non
                                     pass
                     else:
                         arcpy.AddWarning("Error adding row to table.\n%s\n%s" % (errInst, item))
-        except Exception as errInst:
-            arcpy.AddWarning("Error adding row to table.\n%s\n%s" % (errInst, item))
-            raise
-        finally:
-            del row, cursor
 
 if __name__ == '__main__':
     argCount = arcpy.GetArgumentCount()
     if argCount < 1:
-        arcpy.AddError("You must specify your traveler api URL (including access code).")
+        arcpy.AddError("You must specify your traveler api type.")
 
     else:
         # Get the URL
