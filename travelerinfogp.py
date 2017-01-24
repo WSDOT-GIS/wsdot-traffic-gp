@@ -25,6 +25,7 @@ from resturls import urls
 # (excluding in_table and field_name, which are already provided by the dictionary keys).
 fieldsDict = {
     "BorderCrossings": {
+        "geometryType": "POINT",
         "fields": {
             "Description": "TEXT",
             "Direction": "TEXT",
@@ -154,6 +155,7 @@ fieldsDict = {
         }
     },
     "HighwayCameras": {
+        "geometryType": "POINT",
         "fields": {
             "CameraID":"LONG",
             "Description":"TEXT",
@@ -177,6 +179,7 @@ fieldsDict = {
         }
     },
     "MountainPassConditions": {
+        "geometryType": "POINT",
         "fields": {
             "DateUpdated":"DATE",
             "ElevationInFeet":"LONG",
@@ -195,6 +198,7 @@ fieldsDict = {
         }
     },
     "TollRates": {
+        "geometryType": "POINT",
         "fields": {
             "SignName": "TEXT",
             "TripName": "TEXT",
@@ -213,6 +217,7 @@ fieldsDict = {
         }
     },
     "TrafficFlow": {
+        "geometryType": "POINT",
         "fields": {
             "FlowDataID":"LONG",
             "FlowReadingValue":"SHORT",
@@ -251,6 +256,7 @@ fieldsDict = {
         }
     },
     "WeatherInformation": {
+        "geometryType": "POINT",
         "fields": {
             "StationID": "LONG",
             "StationName": "TEXT",
@@ -270,6 +276,7 @@ fieldsDict = {
         }
     },
     "WeatherStations": {
+        "geometryType": "POINT",
         "fields": {
             "StationCode": "LONG",
             "StationName": "TEXT",
@@ -280,12 +287,12 @@ fieldsDict = {
 }
 
 
-def createTable(tablePath, fieldDict=None, dataList=None, templatesWorkspace=None):
+def createTable(tablePath, tableDefDict=None, dataList=None, templatesWorkspace=None):
     """Creates a table for one of the Traveler API REST Endpoints' data.
     @param tablePath: The path where the new table will be created. If this path already exists than the existing table will be truncated.
     @type tablePath: str
-    @param fieldDict: Optional. A dict that defines the fields that will be created.  If omitted, the fields will be determined by the table path.
-    @type fieldDict: dict
+    @param tableDefDict: Optional. A dict that defines the fields that will be created.  If omitted, the fields will be determined by the table path.
+    @type tableDefDict: dict
     @param dataList: Optional. A list of data returned from travelerinfo.getTravelerInfo that will be used to populate the table.
     @type dataList: list
     @param templatesWorkspace: Optional. The path to a geodatabase containing template tables.  This will be faster than using the AddField tool.
@@ -293,19 +300,15 @@ def createTable(tablePath, fieldDict=None, dataList=None, templatesWorkspace=Non
     """
     tableName = os.path.split(tablePath)[1]
 
-    if fieldDict is None:
-        fieldDict = fieldsDict[tableName]["fields"]
-    isPoint = "Longitude" in fieldDict and "Latitude" in fieldDict
+    if tableDefDict is None:
+        tableDefDict = fieldsDict[tableName]
+    fieldDict = tableDefDict["fields"]
+    isPoint = "geometryType" in tableDefDict and tableDefDict["geometryType"] == "POINT" and "Longitude" in fieldDict and "Latitude" in fieldDict
 
     # Create the table if it does not already exist.
     if not arcpy.Exists(tablePath):
         # Check to see if the fieldDict parameter was provided.  If not, get the fields from the fieldsDict based on
         # the table name in tablePath.
-
-
-        arcpy.AddMessage("Creating table \"%s\"" % tablePath)
-
-
         ws, fcname = os.path.split(tablePath)
         if templatesWorkspace is not None and arcpy.Exists(os.path.join(templatesWorkspace, tableName)):
             templatePath = os.path.join(templatesWorkspace, tableName)
