@@ -292,27 +292,45 @@ def createTable(tablePath, fieldDict=None, dataList=None, templatesWorkspace=Non
     @type templatesWorkspace: str
     """
     tableName = os.path.split(tablePath)[1]
+
+    if fieldDict is None:
+        fieldDict = fieldsDict[tableName]["fields"]
+    isPoint = "Longitude" in fieldDict and "Latitude" in fieldDict
+
     # Create the table if it does not already exist.
     if not arcpy.Exists(tablePath):
         # Check to see if the fieldDict parameter was provided.  If not, get the fields from the fieldsDict based on
         # the table name in tablePath.
-        if fieldDict is None:
-            fieldDict = fieldsDict[tableName]["fields"]
+
 
         arcpy.AddMessage("Creating table \"%s\"" % tablePath)
 
+
+        ws, fcname = os.path.split(tablePath)
         if templatesWorkspace is not None and arcpy.Exists(os.path.join(templatesWorkspace, tableName)):
             templatePath = os.path.join(templatesWorkspace, tableName)
             arcpy.AddMessage("Creating table %s using template %s..." % (tablePath, templatePath))
-            arcpy.management.CreateTable(*os.path.split(tablePath), template=templatePath)
+            if isPoint:
+                arcpy.management.CreateFeatureclass(ws, fcname, "POINT", templatePath, "SAME_AS_TEMPLATE", "SAME_AS_TEMPLATE", templatePath)
+            else:
+                arcpy.management.CreateTable(ws, fcname, template=templatePath)
         else:
             arcpy.AddMessage("Creating table %s..." % tablePath)
             arcpy.AddWarning("Creating table without a template.  Table creation would be faster if using a template.")
-            arcpy.management.CreateTable(*os.path.split(tablePath))
+            if isPoint:
+                arcpy.management.CreateFeatureclass(ws, fcname, "POINT", spatial_reference=arcpy.SpatialReference(4326))
+            else:
+                arcpy.management.CreateTable(ws, fcname)
 
             arcpy.AddMessage("Adding fields...")
+
+            skippedFieldsRe = re.compile(r"^L((ong)|(at))itude$", re.VERBOSE)
+
             # Add the columns
             for key in fieldDict:
+                if isPoint and skippedFieldsRe.match(key):
+                    # Don't add Long. or Lat. fields. These will be added as SHAPE@XY.
+                    continue
                 try:
                     val = fieldDict[key]
                     if (type(val) == dict):
@@ -332,11 +350,16 @@ def createTable(tablePath, fieldDict=None, dataList=None, templatesWorkspace=Non
         badValueRe = re.compile("^(?P<error>.+) \[(?P<field>\w+)\]$",re.MULTILINE)
         arcpy.AddMessage("Adding data to table...")
         fields = list(fieldDict.keys())
+        if isPoint:
+            map(fields.remove, ("Longitude", "Latitude"))
+            fields.append("SHAPE@XY")
         with arcpy.da.InsertCursor(tablePath, fields) as cursor:
             for item in dataList:
                 row = []
-                for key in fields: #key in item:
-                    if not key in item:
+                for key in fields:
+                    if key == "SHAPE@XY" and "Longitude" in item and "Latitude" in item:
+                        row.append((item["Longitude"], item["Latitude"]))
+                    elif not key in item:
                         row.append(None)
                     else:
                         val = item[key]
