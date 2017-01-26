@@ -1,8 +1,10 @@
 """Unit test for travelerinfo
 """
 
-import unittest, travelerinfo
-from resturls import urls
+import unittest
+import travelerinfo
+from resturls import URLS
+
 
 class TestTravelerInfo(unittest.TestCase):
     """Defines a unit test test case
@@ -11,12 +13,15 @@ class TestTravelerInfo(unittest.TestCase):
         """Performs tests common to all of the returned lists."""
         self.assertIsInstance(the_list, list)
         self.assertGreater(len(the_list), 0)
-        for c in the_list:
-            self.assertIsInstance(c, dict)
+        for current in the_list:
+            self.assertIsInstance(current, dict)
+
     def test_endpoints(self):
-        # Call the REST endpoints and store results.
-        for k in urls:
-            ds = travelerinfo.getTravelerInfo(k)
-            self.perform_basic_tests(ds)
+        """Tests the rest endpoints.
+        """
+        # Call the REST endpoints and test them.
+        for k in URLS:
+            dataset = travelerinfo.get_traveler_info(k)
+            self.perform_basic_tests(dataset)
 if __name__ == '__main__':
     unittest.main()

@@ -3,36 +3,38 @@
 import datetime
 import re
 
-dateRe = re.compile(r"\/Date\((\d+)([+\-]\d+)\)\/",re.IGNORECASE)
-camelCaseRe = re.compile(r"(?:[A-Z][a-z]+)|[A-Z]{2}")
+_DATE_RE = re.compile(r"\/Date\((\d+)([+\-]\d+)\)\/", re.IGNORECASE)
+_CAMEL_CASE_RE = re.compile(r"(?:[A-Z][a-z]+)|[A-Z]{2}")
 
-def parseDate(wcfDate):
+
+def parse_date(wcf_date):
     """Parses a WCF serialzied date to a date string.
-    @param wcfDate: A date/time in WCF JSON serialized format.
-    @type wcfDate: str
-    @rtype: datetime.datetime
+    :param wcf_date: A date/time in WCF JSON serialized format.
+    :type wcf_date: str
+    :rtype: datetime.datetime
     """
-    if wcfDate:
-        match = dateRe.match(wcfDate)
+    if wcf_date:
+        match = _DATE_RE.match(wcf_date)
         if match:
             groups = match.groups()
             ticks = None
-            if (len(groups) >= 2):
+            if len(groups) >= 2:
                 ticks = (int(groups[0]) + int(groups[1])) / 1000
             else:
                 ticks = int(groups[0]) / 1000
             return datetime.datetime.fromtimestamp(ticks)
         else:
-            return wcfDate
+            return wcf_date
 
-def splitCamelCase(s):
+
+def split_camel_case(the_string):
     """Splits a camel case word into individual words separated by spaces
-    @param s: A camel-case word.
-    @type s: str
-    @rtype: str
+    :param the_string: A camel-case word.
+    :type the_string: str
+    :rtype: str
     """
-    if (s is not None):
-        words = camelCaseRe.findall(s)
+    if the_string is not None:
+        words = _CAMEL_CASE_RE.findall(the_string)
         return str.join(" ", words)
     else:
         return None

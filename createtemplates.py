@@ -1,30 +1,30 @@
-'''
+"""
 Creates the templates file geodatabase.
-Created on May 31, 2012
-
-@author: Jeff Jacobson
-'''
-import sys, os, travelerinfogp, arcpy
+"""
+import os
 from os import path
+import travelerinfogp
+import arcpy
 
 if __name__ == '__main__':
     # Get the .. directory
-    dataDir = path.abspath("Data")
+    DATA_DIR = path.abspath("Data")
 
     # Create the data dir if it does not exist already.
-    if not path.exists(dataDir):
-        arcpy.AddMessage("Creating directory, %s..." % dataDir)
-        os.mkdir(dataDir)
+    if not path.exists(DATA_DIR):
+        arcpy.AddMessage("Creating directory, %s..." % DATA_DIR)
+        os.mkdir(DATA_DIR)
     else:
-        arcpy.AddMessage("%s already exists.  Skipping creation step." % dataDir)
+        arcpy.AddMessage("%s already exists.  Skipping creation step." %
+                         DATA_DIR)
 
     # Create the Templates GDB
     arcpy.env.overwriteOutput = True
-    gdbName = "Templates.gdb"
-    gdbPath = path.join(dataDir, gdbName)
-    arcpy.AddMessage("Creating %s..." % gdbPath)
-    arcpy.management.CreateFileGDB(dataDir, gdbName)
-    for key in travelerinfogp.fieldsDict:
-        arcpy.AddMessage("Creating %s in %s..." % (key, gdbPath))
-        travelerinfogp.createTable(path.join(gdbPath, key))
+    GDB_NAME = "Templates.gdb"
+    GDB_PATH = path.join(DATA_DIR, GDB_NAME)
+    arcpy.AddMessage("Creating %s..." % GDB_PATH)
+    arcpy.management.CreateFileGDB(DATA_DIR, GDB_NAME)
+    for key in travelerinfogp.TABLE_DEFS_DICT_DICT:
+        arcpy.AddMessage("Creating %s in %s..." % (key, GDB_PATH))
+        travelerinfogp.create_table(path.join(GDB_PATH, key))
     arcpy.AddMessage("Completed")

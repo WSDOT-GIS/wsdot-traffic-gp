@@ -1,7 +1,7 @@
 wsdot-traffic-gp
 ================
 
-The scripts in this repository can be used to consume [WSDOT Traveler Information API](http://wsdot.wa.gov/Traffic/api/) REST endpoints in [ArcGIS](http://resources.arcgis.com/) software.
+The scripts in this repository can be used to consume [WSDOT Traveler Information API] REST endpoints in [ArcGIS]  software.
 
 [![Build Status](https://travis-ci.org/WSDOT-GIS/wsdot-traffic-gp.svg?branch=master)](https://travis-ci.org/WSDOT-GIS/wsdot-traffic-gp)
 
@@ -28,4 +28,6 @@ It can also be imported as a module, providing the ability to query the REST end
 ### `travelerinfogp.py` ###
 This is a geoprocessing script that can consume the REST endpoints and return the results as a table.  Can be used as a stand-alone script or imported as a module.
 
+[ArcGIS]:http://resources.arcgis.com/
 [docstrings]:https://en.wikipedia.org/wiki/Docstring#Python
+[WSDOT Traveler Information API]:http://www.wsdot.wa.gov/Traffic/api/
