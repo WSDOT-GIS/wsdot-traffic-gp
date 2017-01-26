@@ -1,4 +1,3 @@
-.vscode
 accesscode.txt
 *.pyc
 *.gdb
@@ -7,3 +6,4 @@ accesscode.txt
 *.pyproj
 *.suo
 *.sln
+.ropeproject

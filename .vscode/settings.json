@@ -1,0 +1,5 @@
+{
+    "editor.wrappingColumn": 80,
+    "python.linting.pylintEnabled": true,
+    "python.linting.pep8Enabled": true
+}
