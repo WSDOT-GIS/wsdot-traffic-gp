@@ -1,10 +1,14 @@
 """
 Creates the templates file geodatabase.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+
 import os
 from os import path
-import travelerinfogp
+
 import arcpy
+import travelerinfogp
 
 if __name__ == '__main__':
     # Get the .. directory

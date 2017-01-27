@@ -1,6 +1,8 @@
 """
 Provides a list of URLs for REST endpoints.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 
 API_BASE = "http://www.wsdot.wa.gov/Traffic/api"
 

@@ -1,10 +1,12 @@
 '''Utilities for parsing strings into other types.
 '''
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 import datetime
 import re
 
 _DATE_RE = re.compile(r"\/Date\((\d+)([+\-]\d+)\)\/", re.IGNORECASE)
-_CAMEL_CASE_RE = re.compile(r"(?:[A-Z][a-z]+)|[A-Z]{2}")
+_CAMEL_CASE_RE = re.compile(r"(?:[A-Z][a-z]+)")
 
 
 def parse_date(wcf_date):
@@ -35,6 +37,6 @@ def split_camel_case(the_string):
     """
     if the_string is not None:
         words = _CAMEL_CASE_RE.findall(the_string)
-        return str.join(" ", words)
+        return " ".join(words)
     else:
         return None
