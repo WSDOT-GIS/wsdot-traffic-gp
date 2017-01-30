@@ -230,7 +230,10 @@ TABLE_DEFS_DICT_DICT = {
             "RestrictionOneTravelDirection": "TEXT",
             "RestrictionTwoRestrictionText": "TEXT",
             "RestrictionTwoTravelDirection": "TEXT",
-            "RoadCondition": "TEXT",
+            "RoadCondition": {
+                "field_type": "TEXT",
+                "field_length": 500
+            },
             "TemperatureInFahrenheit": "SHORT",
             "TravelAdvisoryActive": "SHORT",
             "WeatherCondition": "TEXT"
