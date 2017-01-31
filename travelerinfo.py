@@ -91,8 +91,12 @@ Valid values are:\n\tALL\n")
         if len(sys.argv) >= 3:
             CODE = sys.argv[2]
         if re.match("ALL", NAME, re.IGNORECASE):
+            OUTDIR = "output"
+            # Create the output directory if not already present.
+            if not os.path.exists(OUTDIR):
+                os.mkdir(OUTDIR)
             for endpoint_name in URLS:
-                with open("%s.json" % endpoint_name, 'w') as f:
+                with open("%s/%s.json" % (OUTDIR, endpoint_name), 'w') as f:
                     json.dump(get_traveler_info(endpoint_name, CODE), f,
                               cls=CustomEncoder, indent=True)
         else:
