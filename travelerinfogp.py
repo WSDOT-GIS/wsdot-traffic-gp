@@ -19,323 +19,17 @@ from resturls import URLS
 from domaintools import add_domain
 from jsonhelpers import CustomEncoder
 
-DOMAINS = {
-    "FlowReadingValues": {
-        "domain_description": "Possible values for traffic flow sensor points",
-        # 0-5, respectively: Unknown, WideOpen, Moderate, Heavy, StopAndGo,
-        # NoData
-        "values": ["Unknown",
-                   "Wide Open",
-                   "Moderate",
-                   "Heavy",
-                   "Stop and Go",
-                   "No Data"]
-    },
-    # 0,1 = BridgeRestriction, RoadRestriction
-    "CommercialVehicleRestrictionType": {
-        "values": ["Bridge Restriction", "Road Restriction"]
-    },
-    "Boolean": {
-        "values": ["false", "true"]
-    }
-}
+with open("./domains.json", "r") as domains_file:
+    DOMAINS = json.load(domains_file)
 
 # This dictionary defines the fields in each table.  Each field's dictionary
 # entry can either contain a single string value indicating the field type, or
 # a dictionary with parameters for the arcpy.management.AddField function
 # (excluding in_table and field_name, which are already provided by the
 # dictionary keys).
-TABLE_DEFS_DICT_DICT = {
-    "BorderCrossings": {
-        "geometryType": "POINT",
-        "fields": {
-            "Description": "TEXT",
-            "Direction": "TEXT",
-            "Latitude": "DOUBLE",
-            "Longitude": "DOUBLE",
-            "MilePost": "SINGLE",
-            "RoadName": "TEXT",
-            "CrossingName": "TEXT",
-            "Time": "DATE",
-            "WaitTime": "SHORT"
-        }
-    },
-    "BridgeClearances": {
-        "fields": {
-            "LocationID": "GUID",
-            "StructureID": "TEXT",
-            "StateRouteID": {
-                "field_type": "TEXT",
-                "field_length": "3"
-            },
-            "IsConnector": "SHORT",
-            "BeginLatitude": "DOUBLE",
-            "BeginLongitude": "DOUBLE",
-            "BeginMilePost": "SINGLE",
-            "EndLatitude": "DOUBLE",
-            "EndLongitude": "DOUBLE",
-            "EndMilePost": "SINGLE",
-            "MaximumVerticalClearance": "TEXT",
-            "MaximumVerticalClearanceInches": "LONG",
-            "MinimumVerticalClearance": "TEXT",
-            "MinimumVerticalClearanceInches": "LONG",
-            "LRSRoute": {
-                "field_type": "TEXT",
-                "field_length": "11"
-            },
-            "BridgeName": "TEXT"
-        },
-        "domains": {
-            "IsConnector": "Boolean"
-        }
-    },
-    "CVRestrictions": {
-        "fields": {
-            "BLMaxAxle": "LONG",
-            "BridgeName": "TEXT",
-            "BridgeNumber": "TEXT",
-            "CL8MaxAxle": "LONG",
-            "DateEffective": "DATE",
-            "DateExpires": "DATE",
-            "DatePosted": "DATE",
-
-            "StartRoadwayLocationDescription": "TEXT",
-            "StartRoadwayLocationDirection": "TEXT",
-            "StartRoadwayLocationLatitude": "DOUBLE",
-            "StartRoadwayLocationLongitude": "DOUBLE",
-            "StartRoadwayLocationMilePost": "SINGLE",
-            "StartRoadwayLocationRoadName": "TEXT",
-
-            "EndRoadwayLocationDescription": "TEXT",
-            "EndRoadwayLocationDirection": "TEXT",
-            "EndRoadwayLocationLatitude": "DOUBLE",
-            "EndRoadwayLocationLongitude": "DOUBLE",
-            "EndRoadwayLocationMilePost": "SINGLE",
-            "EndRoadwayLocationRoadName": "TEXT",
-
-            "IsDetourAvailable": "SHORT",
-            "IsExceptionsAllowed": "SHORT",
-            "IsPermanentRestriction": "SHORT",
-            "IsWarning": "SHORT",
-
-            "Latitude": "DOUBLE",
-            "Longitude": "DOUBLE",
-            "LocationDescription": "TEXT",
-            "LocationName": "TEXT",
-            "MaximumGrossVehicleWeightInPounds": "LONG",
-            "RestrictionComment": {
-                "field_type": "TEXT",
-                "field_length": 800
-            },
-            "RestrictionHeightInInches": "LONG",
-            "RestrictionLengthInInches": "LONG",
-            "RestrictionType": "SHORT",
-            "RestrictionWeightInPounds": "LONG",
-            "RestrictionWidthInInches": "LONG",
-            "SAMaxAxle": "LONG",
-
-            "State": "TEXT",
-            "StateRouteID": "TEXT",
-            "TDMaxAxle": "LONG",
-            "VehicleType": "TEXT"
-        },
-        "domains": {
-            "RestrictionType": "CommercialVehicleRestrictionType",
-            "IsDetourAvailable": "Boolean",
-            "IsExceptionsAllowed": "Boolean",
-            "IsPermanentRestriction": "Boolean",
-            "IsWarning": "Boolean",
-        }
-    },
-    "HighwayAlerts": {
-        "fields": {
-            "AlertID": "LONG",
-            "County": "TEXT",
-
-            "EndRoadwayLocationDescription": "TEXT",
-            "EndRoadwayLocationDirection": "TEXT",
-            "EndRoadwayLocationLatitude": "DOUBLE",
-            "EndRoadwayLocationLongitude": "DOUBLE",
-            "EndRoadwayLocationMilePost": "FLOAT",
-            "EndRoadwayLocationRoadName": "TEXT",
-
-            "StartTime": "DATE",
-            "EndTime": "DATE",
-            "EventCategory": "TEXT",
-            "EventStatus": "TEXT",
-            "ExtendedDescription": {
-                "field_type": "TEXT",
-                "field_length": 1500
-            },
-            "HeadlineDescription": {
-                "field_type": "TEXT",
-                "field_length": 500
-            },
-            "LastUpdatedTime": "DATE",
-            "Priority": {
-                "field_type": "TEXT",
-                "field_length": 7
-            },
-            "Region": "TEXT",
-            "StartRoadwayLocationDescription": "TEXT",
-            "StartRoadwayLocationDirection": "TEXT",
-            "StartRoadwayLocationLatitude": "DOUBLE",
-            "StartRoadwayLocationLongitude": "DOUBLE",
-            "StartRoadwayLocationMilePost": "FLOAT",
-            "StartRoadwayLocationRoadName": "TEXT"
-        }
-    },
-    "HighwayCameras": {
-        "geometryType": "POINT",
-        "fields": {
-            "CameraID": "LONG",
-            "LocationDescription": "TEXT",
-            "Direction": "TEXT",
-            "Latitude": "DOUBLE",
-            "Longitude": "DOUBLE",
-            "MilePost": "DOUBLE",
-            "RoadName": "TEXT",
-            "CameraOwner": "TEXT",
-            "Description": "TEXT",
-            "DisplayLatitude": "DOUBLE",
-            "DisplayLongitude": "DOUBLE",
-            "ImageHeight": "SHORT",
-            "ImageURL": {
-                "field_name": "ImageUrl",
-                "field_type": "TEXT",
-                "field_alias": "Image URL"
-            },
-            "ImageWidth": "SHORT",
-            "IsActive": "SHORT",
-            "OwnerURL": {
-                "field_name": "OwnerUrl",
-                "field_type": "TEXT",
-                "field_alias": "Owner URL"
-            },
-            "Region": "TEXT",
-            "SortOrder": "SHORT",
-            "Title": "TEXT"
-        }
-    },
-    "MountainPassConditions": {
-        "geometryType": "POINT",
-        "fields": {
-            "DateUpdated": "DATE",
-            "ElevationInFeet": "LONG",
-            "Latitude": "DOUBLE",
-            "Longitude": "DOUBLE",
-            "MountainPassId": "LONG",
-            "MountainPassName": "TEXT",
-            "RestrictionOneRestrictionText": "TEXT",
-            "RestrictionOneTravelDirection": "TEXT",
-            "RestrictionTwoRestrictionText": "TEXT",
-            "RestrictionTwoTravelDirection": "TEXT",
-            "RoadCondition": {
-                "field_type": "TEXT",
-                "field_length": 500
-            },
-            "TemperatureInFahrenheit": "SHORT",
-            "TravelAdvisoryActive": "SHORT",
-            "WeatherCondition": "TEXT"
-        },
-        "domains": {
-            "TravelAdvisoryActive": "Boolean"
-        }
-    },
-    "TollRates": {
-        "geometryType": "POINT",
-        "fields": {
-            "SignName": "TEXT",
-            "TripName": "TEXT",
-            "CurrentToll": "SHORT",
-            "CurrentMessage": "TEXT",
-            "StateRoute": "TEXT",
-            "TravelDirection": "TEXT",
-            "StartMilepost": "SINGLE",
-            "StartLocationName": "TEXT",
-            "StartLatitude": "DOUBLE",
-            "StartLongitude": "DOUBLE",
-            "EndMilepost": "SINGLE",
-            "EndLocationName": "TEXT",
-            "EndLatitude": "DOUBLE",
-            "EndLongitude": "DOUBLE"
-        }
-    },
-    "TrafficFlow": {
-        "geometryType": "POINT",
-        "fields": {
-            "FlowDataID": "LONG",
-            "FlowReadingValue": "SHORT",
-            "LocationDescription": "TEXT",
-            "Direction": "TEXT",
-            "Latitude": "DOUBLE",
-            "Longitude": "DOUBLE",
-            "MilePost": "FLOAT",
-            "RoadName": "TEXT",
-            "Region": "TEXT",
-            "StationName": "TEXT",
-            "Time": "DATE"
-        },
-        "domains": {
-            "FlowReadingValue": "FlowReadingValues"
-        }
-    },
-    "TravelTimes": {
-        "fields": {
-            "AverageTime": "LONG",
-            "CurrentTime": "LONG",
-            "Description": "TEXT",
-            "Distance": "DOUBLE",
-            "StartPointDescription": "TEXT",
-            "StartPointDirection": "TEXT",
-            "StartPointLatitude": "DOUBLE",
-            "StartPointLongitude": "DOUBLE",
-            "StartPointMilePost": "FLOAT",
-            "StartPointRoadName": "TEXT",
-            "EndPointDescription": "TEXT",
-            "EndPointDirection": "TEXT",
-            "EndPointLatitude": "DOUBLE",
-            "EndPointLongitude": "DOUBLE",
-            "EndPointMilePost": "FLOAT",
-            "EndPointRoadName": "TEXT",
-            "Name": "TEXT",
-            "TimeUpdated": "DATE",
-            "TravelTimeID": "LONG"
-        }
-    },
-    "WeatherInformation": {
-        "geometryType": "POINT",
-        "fields": {
-            "StationID": "LONG",
-            "StationName": "TEXT",
-            "Latitude": "DOUBLE",
-            "Longitude": "DOUBLE",
-            "ReadingTime": "DATE",
-            "TemperatureInFahrenheit": "DOUBLE",
-            "PrecipitationInInches": "DOUBLE",
-            "WindSpeedInMPH": "DOUBLE",
-            "WindGustSpeedInMPH": "DOUBLE",
-            "Visibility": "SHORT",
-            "SkyCoverage": "TEXT",
-            "BarometricPressure": "DOUBLE",
-            "RelativeHumidity": "DOUBLE",
-            "WindDirectionCardinal": {
-                "field_type": "TEXT",
-                "field_length": 3
-            },
-            "WindDirection": "DOUBLE"
-        }
-    },
-    "WeatherStations": {
-        "geometryType": "POINT",
-        "fields": {
-            "StationCode": "LONG",
-            "StationName": "TEXT",
-            "Latitude": "DOUBLE",
-            "Longitude": "DOUBLE"
-        }
-    }
-}
+# TABLE_DEFS_DICT_DICT =
+with open("./tabledefs.json", "r") as def_file:
+    TABLE_DEFS_DICT_DICT = json.load(def_file)
 
 
 def create_table(table_path, table_def_dict=None, data_list=None,
@@ -514,15 +208,20 @@ def _add_domains(table_def_dict, table_path):
 if __name__ == '__main__':
     # Get the parameters or set default values.
     ARG_COUNT = arcpy.GetArgumentCount()
+    # Set default output path
     OUT_PATH = "./TravelerInfo.gdb"
+    # Use user-provided output path if available.
     if ARG_COUNT > 0:
         OUT_PATH = arcpy.GetParameterAsText(0)
+    # Get the API access code
     ACCESS_CODE = None
     if ARG_COUNT > 1:
         ACCESS_CODE = arcpy.GetParameterAsText(1)
+    # Get the geodatabase containing templates
     TEMPLATES_GDB = "Data/Templates.gdb"
     if ARG_COUNT > 2:
         TEMPLATES_GDB = arcpy.GetParameterAsText(2)
+    # If the templates GDB doesn't exist, set variable to None.
     if not arcpy.Exists(TEMPLATES_GDB):
         TEMPLATES_GDB = None
 
@@ -534,6 +233,9 @@ if __name__ == '__main__':
     # Download each of the REST endpoints.
     for name in URLS:
         arcpy.AddMessage("Contacting %s..." % URLS[name])
+        # If user provided access code, use it.
+        # Otherwise don't provide to function, which will use default from
+        # environment or text file.`
         if ACCESS_CODE:
             data = travelerinfo.get_traveler_info(name, ACCESS_CODE)
         else:

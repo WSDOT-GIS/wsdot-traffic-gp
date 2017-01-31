@@ -1,0 +1,25 @@
+{
+    "FlowReadingValues": {
+        "domain_description": "Possible values for traffic flow sensor points",
+        "values": [
+            "Unknown",
+            "Wide Open",
+            "Moderate",
+            "Heavy",
+            "Stop and Go",
+            "No Data"
+        ]
+    },
+    "CommercialVehicleRestrictionType": {
+        "values": [
+            "Bridge Restriction",
+            "Road Restriction"
+        ]
+    },
+    "Boolean": {
+        "values": [
+            "false",
+            "true"
+        ]
+    }
+}
