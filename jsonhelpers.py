@@ -33,6 +33,29 @@ def _simplfy_field_name(field_name):
             replacement = ""
         return field_name.replace(match.group(), replacement)
 
+    location_name_re = re.compile(r"""^(
+        (?P<start>
+            (?:Start)|
+            (?:Begin)
+        )|(?P<end>End)
+    )\w+(?P<prop_desc>
+        (RoadName)|
+        (Longitude)|
+        (Latitude)|
+        (MilePost)|
+        (Description)|
+        (Direction)
+    )$
+    """, re.VERBOSE | re.IGNORECASE)
+
+    match = location_name_re.match(field_name)
+
+    if match:
+        if match.group("start"):
+            return match.expand(r"Start\g<prop_desc>")
+        else:
+            return match.expand(r"End\g<prop_desc>")
+
     return field_name
 
 
