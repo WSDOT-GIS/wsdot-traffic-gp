@@ -3,6 +3,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import datetime
+import time
 import re
 
 _DATE_RE = re.compile(r"\/Date\((\d+)([+\-]\d+)\)\/", re.IGNORECASE)
@@ -59,7 +60,7 @@ class SRFormatError(ValueError):
         return msg_fmt % self.value
 
 
-def parse_date(wcf_date):
+def parse_wcf_date(wcf_date):
     """Parses a WCF serialzied date to a date string.
     :param wcf_date: A date/time in WCF JSON serialized format.
     :type wcf_date: str
@@ -79,6 +80,16 @@ def parse_date(wcf_date):
             return wcf_date
 
 
+def to_wcf_date(date_obj):
+    """Converts a datetime.datetime object into a WCF date format string.
+    """
+    if not isinstance(date_obj, (datetime.datetime, datetime.date,
+                                 datetime.time)):
+        raise TypeError("Must be datetime, date, or time")
+    ticks = int(time.mktime(date_obj.timetuple()) * 1000)
+    return "/Date(%d)/" % ticks
+
+
 def split_camel_case(the_string):
     """Splits a camel case word into individual words separated by spaces
     :param the_string: A camel-case word.
@@ -95,17 +106,20 @@ def split_camel_case(the_string):
 def parse_route_id(route_id):
     """Parses a route identifier into its component parts: SR, RRT, RRQ
     """
+    # Convert integer to three-digit route ID.
+    if isinstance(route_id, (int, long)):
+        return ("%03d" % route_id, None, None)
+    # Convert non-string to string.
     if not isinstance(route_id, (unicode, str)):
-        raise TypeError("route_id should be a str or unicode")
-    if re.match(r"^\d{1,3}$", route_id):
-        if len(route_id) == 1:
-            return "00%s" % route_id, None, None
-        elif len(route_id) == 2:
-            return "0%s" % route_id, None, None
-        else:
-            return route_id, None, None
+        route_id = str(route_id)
+
+    if re.match(r"^\d{1,2}$", route_id):
+        return ("%03d" % int(route_id), None, None)
+
     match = _ROUTE_ID_RE.match(route_id)
     if not match:
         raise SRFormatError(route_id)
     if match:
-        return tuple(map(match.group, ("sr", "rrt", "rrq")))
+        parts = map(match.group, ("sr", "rrt", "rrq"))
+        parts = map(unicode, parts)
+        return tuple(parts)

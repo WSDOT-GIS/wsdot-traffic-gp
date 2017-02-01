@@ -83,7 +83,7 @@ def parse_traveler_info_object(dct):
                 # Parse date/time values.
                 # Either parses into date (if possible) or returns the original
                 # string.
-                output[simplified_key] = parseutils.parse_date(val.strip())
+                output[simplified_key] = parseutils.parse_wcf_date(val.strip())
             else:
                 output[simplified_key] = val
     return output
