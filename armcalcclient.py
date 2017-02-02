@@ -5,11 +5,10 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import urllib2
-import sys
 from datetime import datetime, date
-from json import JSONEncoder, dumps
+from json import JSONEncoder, dumps, loads
 
-from parseutils import to_wcf_date
+from parseutils import to_wcf_date, parse_wcf_date
 
 # pylint: disable=invalid-name
 # property names match those of API, which aren't what pylint prefers.
@@ -22,6 +21,7 @@ class ArmCalcJsonEncoder(JSONEncoder):
     """Custom JSON encoder for serializing ArmCalc objects
     to JSON.
     """
+
     def default(self, obj):  # pylint: disable=method-hidden
         """Provides custom handling for ArmCalcInput, ArmCalcOutput, and
         datetime.datetime. All other types will be passed to super.default.
@@ -63,7 +63,14 @@ class ArmCalcInput(object):
         self.ResponseDate = ResponseDate
         #  Transaction ID. Use a unique ID with batch results. *
         self.TransId = TransId
-        super(ArmCalcInput, self).__init__()
+
+    def __repr__(self):
+        return 'ArmCalcInput(CalcType=%s, SR=%s, RRT=%s,\
+RRQ=%s, ABIndicator=%s, ReferenceDate=%s, ARM=%s, SRMP=%s, \
+ResponseDate=%s, TransId=%s)' % (self.CalcType, self.SR, self.RRT, self.RRQ,
+                                 self.ABIndicator, self.ReferenceDate,
+                                 self.ARM, self.SRMP, self.ResponseDate,
+                                 self.TransId)
 
 
 class ArmCalcOutput(ArmCalcInput):
@@ -86,15 +93,32 @@ class ArmCalcOutput(ArmCalcInput):
                                             ReferenceDate, ARM, SRMP,
                                             ResponseDate, TransId)
 
+    def __repr__(self):
+        return 'ArmCalcOutput(CalcType=%s, SR=%s, RRT=%s,\
+RRQ=%s, ABIndicator=%s, ReferenceDate=%s, ARM=%s, SRMP=%s, \
+ResponseDate=%s, TransId=%s, CalculationReturnCode=%s, \
+CalculationReturnMessage=%s,RealignmentDate=%s)' % (
+            self.CalcType, self.SR, self.RRT, self.RRQ, self.ABIndicator,
+            self.ReferenceDate, self.ARM, self.SRMP, self.ResponseDate, self.TransId, self.CalculationReturnCode, self.CalculationReturnMessage, self.RealignmentDate)
+
 DEFAULT_URL = \
     "http://webapps.wsdot.loc/StateRoute/LocationReferencingMethod/\
 Transformation/ARMCalc/ArmCalcService.svc/REST"
+
+
+def _hook(val):
+    if isinstance(val, (str, unicode)):
+        if len(val) == 0:
+            return None
+        return parse_wcf_date(val)
+    return val
 
 
 class ArmCalcClient(object):
     """
     Client for ArmCalc web service.
     """
+
     def __init__(self, url=DEFAULT_URL):
         self.url = url
 
@@ -114,8 +138,11 @@ class ArmCalcClient(object):
         })
         try:
             response = urllib2.urlopen(req)
-            output = response.read()
+            out_json = response.read()
         except urllib2.HTTPError:
-            sys.stderr.write(url)
             raise
-        return output
+        out_dict_list = loads(out_json, object_hook=_hook)
+        out_list = []
+        for item in out_dict_list:
+            out_list.append(ArmCalcOutput(**item))
+        return out_list

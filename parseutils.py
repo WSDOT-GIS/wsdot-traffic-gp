@@ -6,7 +6,7 @@ import datetime
 import time
 import re
 
-_DATE_RE = re.compile(r"\/Date\((\d+)([+\-]\d+)\)\/", re.IGNORECASE)
+WCF_DATE_RE = re.compile(r"\/Date\((\d+)([+\-]\d+)\)\/", re.IGNORECASE)
 _CAMEL_CASE_RE = re.compile(r"(?:[A-Z][a-z]+)")
 
 # ==RRTs (Related Roadway Type)==
@@ -60,24 +60,30 @@ class SRFormatError(ValueError):
         return msg_fmt % self.value
 
 
-def parse_wcf_date(wcf_date):
+def parse_wcf_date(wcf_date, throw_on_wrong_format=False):
     """Parses a WCF serialzied date to a date string.
     :param wcf_date: A date/time in WCF JSON serialized format.
     :type wcf_date: str
-    :rtype: datetime.datetime
+    :param throw_on_wrong_format: Set to True to throw error on wrong format,
+        False (default) to simply return original string.
+    :rtype: datetime.datetime or str or unicode
     """
-    if wcf_date:
-        match = _DATE_RE.match(wcf_date)
-        if match:
-            groups = match.groups()
-            ticks = None
-            if len(groups) >= 2:
-                ticks = (int(groups[0]) + int(groups[1])) / 1000
-            else:
-                ticks = int(groups[0]) / 1000
-            return datetime.datetime.fromtimestamp(ticks)
+    if not isinstance(wcf_date, (str, unicode)):
+        raise TypeError("Only str and unicode types are supported.")
+    match = WCF_DATE_RE.match(wcf_date)
+    if match:
+        groups = match.groups()
+        ticks = None
+        if len(groups) >= 2:
+            ticks = (int(groups[0]) + int(groups[1])) / 1000
         else:
-            return wcf_date
+            ticks = int(groups[0]) / 1000
+        return datetime.datetime.fromtimestamp(ticks)
+    elif throw_on_wrong_format:
+        raise ValueError("Could not parse as a WCF date string: %s." %
+                         wcf_date)
+    else:
+        return wcf_date
 
 
 def to_wcf_date(date_obj):

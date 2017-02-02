@@ -1,9 +1,11 @@
 """Test for armcalcclient
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 
 import unittest
 from datetime import date
-from armcalcclient import ArmCalcInput, ArmCalcClient
+from armcalcclient import ArmCalcInput, ArmCalcOutput, ArmCalcClient
 
 
 class TestArmCalc(unittest.TestCase):
@@ -28,8 +30,13 @@ class TestArmCalc(unittest.TestCase):
         client = ArmCalcClient()
         result = client.batch(data)
 
-        with open("results.json", "w") as out_file:
-            out_file.write(result)
+        print(result)
+
+        self.assertIsInstance(result, list)
+        for item in result:
+            self.assertIsInstance(item, ArmCalcOutput)
+            if item.CalculationReturnCode == 0:
+                map(self.assertIsNotNone, (item.SR, item.ARM, item.SRMP))
 
 if __name__ == "__main__":
     unittest.main()
