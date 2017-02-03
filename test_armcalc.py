@@ -30,8 +30,6 @@ class TestArmCalc(unittest.TestCase):
         client = ArmCalcClient()
         result = client.batch(data)
 
-        print(result)
-
         self.assertIsInstance(result, list)
         for item in result:
             self.assertIsInstance(item, ArmCalcOutput)

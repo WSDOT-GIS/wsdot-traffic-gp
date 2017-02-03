@@ -1,6 +1,5 @@
 {
     "editor.wrappingColumn": 79,
     "python.linting.pylintEnabled": true,
-    "python.linting.pep8Enabled": true,
-    "python.pythonPath": "C:\\Python27\\ArcGIS10.4\\python.exe"
+    "python.linting.pep8Enabled": true
 }
