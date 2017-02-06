@@ -74,9 +74,13 @@ def parse_traveler_info_object(dct):
             for roadway_location_key in val:
                 new_key = key + roadway_location_key
                 new_key = _simplfy_field_name(new_key)
+                if len(new_key) == 0 and val[roadway_location_key] is None:
+                    continue
                 output[new_key] = val[roadway_location_key]
         else:
             simplified_key = _simplfy_field_name(key)
+            if len(simplified_key) == 0 and val is None:
+                continue
             if simplified_key == "LocationID":
                 output[simplified_key] = "{%s}" % val
             elif isinstance(val, (str, unicode)):
