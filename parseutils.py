@@ -68,7 +68,7 @@ def parse_wcf_date(wcf_date, throw_on_wrong_format=False):
         False (default) to simply return original string.
     :rtype: datetime.datetime or str or unicode
     """
-    if not isinstance(wcf_date, (str, unicode)):
+    if not isinstance(wcf_date, str):
         raise TypeError("Only str and unicode types are supported.")
     match = WCF_DATE_RE.match(wcf_date)
     if match:

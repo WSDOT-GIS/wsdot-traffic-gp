@@ -67,7 +67,7 @@ def parse_traveler_info_object(dct):
     @rtype: dict
     """
     output = {}
-    for key, val in dct.iteritems():
+    for key, val in dct.items():
         if isinstance(val, dict):
             # Roadway locations will be "flattened", since tables can't have
             # nested values.
@@ -83,7 +83,7 @@ def parse_traveler_info_object(dct):
                 continue
             if simplified_key == "LocationID":
                 output[simplified_key] = "{%s}" % val
-            elif isinstance(val, (str, unicode)):
+            elif isinstance(val, str):
                 # Parse date/time values.
                 # Either parses into date (if possible) or returns the original
                 # string.

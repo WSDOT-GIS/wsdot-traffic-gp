@@ -4,11 +4,20 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-import urllib2
+from sys import version_info
+
+
 from datetime import datetime, date
 from json import JSONEncoder, dumps, loads
 
 from parseutils import to_wcf_date, parse_wcf_date
+
+# Choose correct library for Python version
+if version_info.major <= 2:
+    from urllib2 import urlopen, HTTPError, Request
+else:
+    from urllib.request import urlopen, Request  # pylint: disable=no-name-in-module,import-error
+    from urllib.error import HTTPError  # pylint: disable=no-name-in-module,import-error
 
 # pylint: disable=invalid-name
 # property names match those of API, which aren't what pylint prefers.
@@ -98,8 +107,10 @@ class ArmCalcOutput(ArmCalcInput):
 RRQ=%s, ABIndicator=%s, ReferenceDate=%s, ARM=%s, SRMP=%s, \
 ResponseDate=%s, TransId=%s, CalculationReturnCode=%s, \
 CalculationReturnMessage=%s,RealignmentDate=%s)' % (
-            self.CalcType, self.SR, self.RRT, self.RRQ, self.ABIndicator,
-            self.ReferenceDate, self.ARM, self.SRMP, self.ResponseDate, self.TransId, self.CalculationReturnCode, self.CalculationReturnMessage, self.RealignmentDate)
+    self.CalcType, self.SR, self.RRT, self.RRQ, self.ABIndicator,
+    self.ReferenceDate, self.ARM, self.SRMP, self.ResponseDate, self.TransId,
+    self.CalculationReturnCode, self.CalculationReturnMessage,
+    self.RealignmentDate)
 
 DEFAULT_URL = \
     "http://webapps.wsdot.loc/StateRoute/LocationReferencingMethod/\
@@ -107,7 +118,7 @@ Transformation/ARMCalc/ArmCalcService.svc/REST"
 
 
 def _hook(val):
-    if isinstance(val, (str, unicode)):
+    if isinstance(val, str):
         if len(val) == 0:
             return None
         return parse_wcf_date(val)
@@ -131,17 +142,25 @@ class ArmCalcClient(object):
         """
         if isinstance(arm_calc_inputs, ArmCalcInput):
             arm_calc_inputs = [arm_calc_inputs]
-        ac_json = dumps(arm_calc_inputs, cls=ArmCalcJsonEncoder, skipkeys=True)
+        ac_json = dumps(arm_calc_inputs, cls=ArmCalcJsonEncoder, skipkeys=True,
+                        ensure_ascii=True)
+        ac_json = bytearray(ac_json, 'utf-8')
         url = "%s/CalcBatch" % self.url
-        req = urllib2.Request(url, ac_json, headers={
+        headers = {
             "Content-Type": "application/json"
-        })
+        }
         try:
-            response = urllib2.urlopen(req)
+            req = Request(url, data=ac_json, headers=headers)
+            response = urlopen(req)
             out_json = response.read()
-        except urllib2.HTTPError:
+        except HTTPError:
             raise
-        out_dict_list = loads(out_json, object_hook=_hook)
+        if version_info.major <= 2:
+            out_dict_list = loads(str(out_json),
+                                  object_hook=_hook)
+        else:
+            out_dict_list = loads(str(out_json, encoding="utf-8"),
+                                  object_hook=_hook)
         out_list = []
         for item in out_dict_list:
             out_list.append(ArmCalcOutput(**item))
