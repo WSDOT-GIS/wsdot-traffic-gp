@@ -14,10 +14,17 @@ import json
 import os
 import re
 import sys
-import urllib2
+from sys import version_info
 
 from jsonhelpers import CustomEncoder, parse_traveler_info_object
 from resturls import URLS
+
+# Choose correct library for Python version
+if version_info.major <= 2:
+    from urllib2 import urlopen, HTTPError, Request
+else:
+    from urllib.request import urlopen, Request  # pylint: disable=no-name-in-module,import-error
+    from urllib.error import HTTPError  # pylint: disable=no-name-in-module,import-error
 
 # Get default access code
 _ACCESS_CODE_FILENAME = "accesscode.txt"
@@ -47,7 +54,7 @@ def get_traveler_info_json(dataname, accesscode=_DEFAULT_ACCESS_CODE):
     if not accesscode:
         raise TypeError(_NO_CODE_MESSAGE)
     url = "%s?AccessCode=%s" % (URLS[dataname], accesscode)
-    with urllib2.urlopen(url) as json_file:
+    with urlopen(url) as json_file:
         output = json_file.read()
     return output
 
@@ -64,9 +71,13 @@ def get_traveler_info(dataname, accesscode=_DEFAULT_ACCESS_CODE):
     if not accesscode:
         raise TypeError(_NO_CODE_MESSAGE)
     url = "%s?AccessCode=%s" % (URLS[dataname], accesscode)
-    json_file = urllib2.urlopen(url)
-    json_data = json.load(json_file, object_hook=parse_traveler_info_object)
-    del json_file
+    json_response = urlopen(url)
+    json_txt = json_response.read()
+    if not isinstance(json_txt, str):
+        json_txt = str(json_txt, "utf-8")
+    json_data = json.loads(json_txt,
+                           object_hook=parse_traveler_info_object)
+    del json_response
     return json_data
 
 
@@ -91,8 +102,12 @@ Valid values are:\n\tALL\n")
         if len(sys.argv) >= 3:
             CODE = sys.argv[2]
         if re.match("ALL", NAME, re.IGNORECASE):
+            OUTDIR = "output"
+            # Create the output directory if not already present.
+            if not os.path.exists(OUTDIR):
+                os.mkdir(OUTDIR)
             for endpoint_name in URLS:
-                with open("%s.json" % endpoint_name, 'w') as f:
+                with open("%s/%s.json" % (OUTDIR, endpoint_name), 'w') as f:
                     json.dump(get_traveler_info(endpoint_name, CODE), f,
                               cls=CustomEncoder, indent=True)
         else:

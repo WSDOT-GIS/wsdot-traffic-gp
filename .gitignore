@@ -9,6 +9,7 @@ accesscode.txt
 *.suo
 *.sln
 .ropeproject
+.vscode/launch.json
 
 BorderCrossings.json
 BridgeClearances.json
