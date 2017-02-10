@@ -21,10 +21,11 @@ from resturls import URLS
 
 # Choose correct library for Python version
 if version_info.major <= 2:
+    # pylint:disable=import-error,unused-import
     from urllib2 import urlopen, HTTPError, Request
 else:
-    from urllib.request import urlopen, Request  # pylint: disable=no-name-in-module,import-error
-    from urllib.error import HTTPError  # pylint: disable=no-name-in-module,import-error
+    from urllib.request import urlopen, Request
+    from urllib.error import HTTPError
 
 # Get default access code
 _ACCESS_CODE_FILENAME = "accesscode.txt"
@@ -86,7 +87,7 @@ if __name__ == '__main__':
 
     if len(sys.argv) < 2:
         # Create list of valid values for error message.
-        VALID_KEYS = list(URLS.iterkeys())
+        VALID_KEYS = list(URLS.keys())
         VALID_KEYS.sort()
         sys.stderr.write(
             "You must provide the traffic api type as a parameter.\

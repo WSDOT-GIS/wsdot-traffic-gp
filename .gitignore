@@ -3,6 +3,7 @@
 accesscode.txt
 *.pyc
 *.gdb
+*.gdb.zip
 .project
 .pydevproject
 *.pyproj
