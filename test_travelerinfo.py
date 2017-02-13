@@ -4,8 +4,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import unittest
-import travelerinfo
-from resturls import URLS
+from wsdottraffic import get_traveler_info
+from wsdottraffic.resturls import URLS
 
 
 class TestTravelerInfo(unittest.TestCase):
@@ -23,7 +23,7 @@ class TestTravelerInfo(unittest.TestCase):
         """
         # Call the REST endpoints and test them.
         for k in URLS:
-            dataset = travelerinfo.get_traveler_info(k)
+            dataset = get_traveler_info(k)
             self.perform_basic_tests(dataset)
 if __name__ == '__main__':
     unittest.main()

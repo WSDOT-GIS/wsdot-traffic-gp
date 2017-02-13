@@ -1,5 +1,7 @@
 .vscode/launch.json
 
+login-info.json
+
 accesscode.txt
 *.pyc
 *.gdb

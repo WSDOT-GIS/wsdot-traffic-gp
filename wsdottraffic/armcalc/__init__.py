@@ -10,14 +10,14 @@ from sys import version_info
 from datetime import datetime, date
 from json import JSONEncoder, dumps, loads
 
-from parseutils import to_wcf_date, parse_wcf_date
+from ..parseutils import to_wcf_date, parse_wcf_date
 
 # Choose correct library for Python version
 if version_info.major <= 2:
-    from urllib2 import urlopen, HTTPError, Request
+    from urllib2 import urlopen, HTTPError, Request # pylint: disable=no-name-in-module,import-error
 else:
-    from urllib.request import urlopen, Request  # pylint: disable=no-name-in-module,import-error
-    from urllib.error import HTTPError  # pylint: disable=no-name-in-module,import-error
+    from urllib.request import urlopen, Request
+    from urllib.error import HTTPError
 
 # pylint: disable=invalid-name
 # property names match those of API, which aren't what pylint prefers.

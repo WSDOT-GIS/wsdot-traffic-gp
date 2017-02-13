@@ -1,11 +1,12 @@
-"""Test for armcalcclient
+"""Test for wsdottraffic.armcalc.ArmCalcClient
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import unittest
 from datetime import date
-from armcalcclient import ArmCalcInput, ArmCalcOutput, ArmCalcClient
+from wsdottraffic.armcalc import (
+    ArmCalcInput, ArmCalcOutput, ArmCalcClient)
 
 
 class TestArmCalc(unittest.TestCase):
@@ -22,7 +23,7 @@ class TestArmCalc(unittest.TestCase):
              "ARM": 0.32, "ResponseDate": the_date},
             {"CalcType": 0, "SR": "005", "ReferenceDate": the_date,
              "SRMP": 150.0, "ResponseDate": the_date}
-            ]
+        ]
         data = []
         for item in input_list:
             aci = ArmCalcInput(**item)

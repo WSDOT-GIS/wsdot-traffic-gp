@@ -8,7 +8,7 @@ import os
 from os import path
 
 import arcpy
-import travelerinfogp
+from wsdottraffic.gp import TABLE_DEFS_DICT_DICT, create_table
 
 if __name__ == '__main__':
     # Get the .. directory
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     GDB_PATH = path.join(DATA_DIR, GDB_NAME)
     arcpy.AddMessage("Creating %s..." % GDB_PATH)
     arcpy.management.CreateFileGDB(DATA_DIR, GDB_NAME)
-    for key in travelerinfogp.TABLE_DEFS_DICT_DICT:
+    for key in TABLE_DEFS_DICT_DICT:
         arcpy.AddMessage("Creating %s in %s..." % (key, GDB_PATH))
-        travelerinfogp.create_table(path.join(GDB_PATH, key))
+        create_table(path.join(GDB_PATH, key))
     arcpy.AddMessage("Completed")
