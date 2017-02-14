@@ -9,19 +9,24 @@ Parameters:
 3   Templates GDB (output)
 """
 import os
+from os.path import join, dirname
 import re
 import json
 import zipfile
 import sys
 
 import arcpy
-import parseutils
-import travelerinfo
-from resturls import URLS
-from domaintools import add_domain
-from jsonhelpers import CustomEncoder
+from ..parseutils import split_camel_case
+from .. import get_traveler_info
+from ..resturls import URLS
+from .domaintools import add_domain
+from ..jsonhelpers import CustomEncoder
 
-with open("./domains.json", "r") as domains_file:
+
+def _get_json_dir():
+    return dirname(__file__)
+
+with open(join(_get_json_dir(), "./domains.json"), "r") as domains_file:
     DOMAINS = json.load(domains_file)
 
 # This dictionary defines the fields in each table.  Each field's dictionary
@@ -30,7 +35,7 @@ with open("./domains.json", "r") as domains_file:
 # (excluding in_table and field_name, which are already provided by the
 # dictionary keys).
 # TABLE_DEFS_DICT_DICT =
-with open("./tabledefs.json", "r") as def_file:
+with open(join(_get_json_dir(), "./tabledefs.json"), "r") as def_file:
     TABLE_DEFS_DICT_DICT = json.load(def_file)
 
 
@@ -173,13 +178,12 @@ def _add_fields(field_dict, is_point, table_path):
             if "field_name" not in val:
                 val["field_name"] = key
             if "field_alias" not in val:
-                val["field_alias"] = parseutils.split_camel_case(
+                val["field_alias"] = split_camel_case(
                     val["field_name"])
             arcpy.management.AddField(table_path, **val)
         else:
             arcpy.management.AddField(table_path, key, val,
-                                      field_alias=parseutils.
-                                      split_camel_case(key))
+                                      field_alias=split_camel_case(key))
 
 
 def _add_domains(table_def_dict, table_path):
@@ -207,55 +211,55 @@ def _add_domains(table_def_dict, table_path):
                                              domain_name)
 
 
-if __name__ == '__main__':
-    # Get the parameters or set default values.
-    ARG_COUNT = arcpy.GetArgumentCount()
-    # Set default output path
-    OUT_GDB_PATH = "./TravelerInfo.gdb"
-    # Use user-provided output path if available.
-    if ARG_COUNT > 0:
-        OUT_GDB_PATH = arcpy.GetParameterAsText(0)
-    # Get the API access code
-    ACCESS_CODE = None
-    if ARG_COUNT > 1:
-        ACCESS_CODE = arcpy.GetParameterAsText(1)
-    # Get the geodatabase containing templates
-    TEMPLATES_GDB = "Data/Templates.gdb"
-    if ARG_COUNT > 2:
-        TEMPLATES_GDB = arcpy.GetParameterAsText(2)
-    # If the templates GDB doesn't exist, set variable to None.
-    if not arcpy.Exists(TEMPLATES_GDB):
-        TEMPLATES_GDB = None
+# if __name__ == '__main__':
+#     # Get the parameters or set default values.
+#     ARG_COUNT = arcpy.GetArgumentCount()
+#     # Set default output path
+#     OUT_GDB_PATH = "./TravelerInfo.gdb"
+#     # Use user-provided output path if available.
+#     if ARG_COUNT > 0:
+#         OUT_GDB_PATH = arcpy.GetParameterAsText(0)
+#     # Get the API access code
+#     ACCESS_CODE = None
+#     if ARG_COUNT > 1:
+#         ACCESS_CODE = arcpy.GetParameterAsText(1)
+#     # Get the geodatabase containing templates
+#     TEMPLATES_GDB = "Data/Templates.gdb"
+#     if ARG_COUNT > 2:
+#         TEMPLATES_GDB = arcpy.GetParameterAsText(2)
+#     # If the templates GDB doesn't exist, set variable to None.
+#     if not arcpy.Exists(TEMPLATES_GDB):
+#         TEMPLATES_GDB = None
 
-    # Create the file GDB if it does not already exist.
-    arcpy.env.overwriteOutput = True
-    if not arcpy.Exists(OUT_GDB_PATH):
-        arcpy.management.CreateFileGDB(*os.path.split(OUT_GDB_PATH))
+#     # Create the file GDB if it does not already exist.
+#     arcpy.env.overwriteOutput = True
+#     if not arcpy.Exists(OUT_GDB_PATH):
+#         arcpy.management.CreateFileGDB(*os.path.split(OUT_GDB_PATH))
 
-    # Download each of the REST endpoints.
-    for name in URLS:
-        arcpy.AddMessage("Contacting %s..." % URLS[name])
-        # If user provided access code, use it.
-        # Otherwise don't provide to function, which will use default from
-        # environment or text file.`
-        if ACCESS_CODE:
-            data = travelerinfo.get_traveler_info(name, ACCESS_CODE)
-        else:
-            data = travelerinfo.get_traveler_info(name)
-        OUT_TABLE = os.path.join(OUT_GDB_PATH, name)
-        create_table(OUT_TABLE, None, data, TEMPLATES_GDB)
-    sys.stderr.write("Compressing data in %s" % OUT_GDB_PATH)
+#     # Download each of the REST endpoints.
+#     for name in URLS:
+#         arcpy.AddMessage("Contacting %s..." % URLS[name])
+#         # If user provided access code, use it.
+#         # Otherwise don't provide to function, which will use default from
+#         # environment or text file.`
+#         if ACCESS_CODE:
+#             data = get_traveler_info(name, ACCESS_CODE)
+#         else:
+#             data = get_traveler_info(name)
+#         OUT_TABLE = os.path.join(OUT_GDB_PATH, name)
+#         create_table(OUT_TABLE, None, data, TEMPLATES_GDB)
+#     sys.stderr.write("Compressing data in %s" % OUT_GDB_PATH)
 
-    ZIP_PATH = "%s.zip" % OUT_GDB_PATH
-    sys.stderr.write("Creating %s..." % ZIP_PATH)
-    if os.path.exists(ZIP_PATH):
-        os.remove(ZIP_PATH)
-    with zipfile.ZipFile(ZIP_PATH, "w",
-                         zipfile.ZIP_LZMA) as out_zip:
-        sys.stderr.write("Adding files to zip...")
-        for dirpath, dirnames, filenames in os.walk(OUT_GDB_PATH):
-            for fn in filenames:
-                out_path = os.path.join(dirpath, fn)
-                out_zip.write(out_path, fn)
+#     ZIP_PATH = "%s.zip" % OUT_GDB_PATH
+#     sys.stderr.write("Creating %s..." % ZIP_PATH)
+#     if os.path.exists(ZIP_PATH):
+#         os.remove(ZIP_PATH)
+#     with zipfile.ZipFile(ZIP_PATH, "w",
+#                          zipfile.ZIP_LZMA) as out_zip:
+#         sys.stderr.write("Adding files to zip...")
+#         for dirpath, dirnames, filenames in os.walk(OUT_GDB_PATH):
+#             for fn in filenames:
+#                 out_path = os.path.join(dirpath, fn)
+#                 out_zip.write(out_path, fn)
 
-    arcpy.SetParameterAsText(3, OUT_GDB_PATH)
+#     arcpy.SetParameterAsText(3, OUT_GDB_PATH)

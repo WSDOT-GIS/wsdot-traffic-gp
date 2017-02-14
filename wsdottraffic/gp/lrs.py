@@ -57,7 +57,7 @@ def _get_matching_field_name(table, field_re):
         return output
 
 
-def create_fc(route_layer,
+def create_fc(route_layer,  # pylint: disable=too-many-arguments
               event_table,
               rl_route_field=_DEFAULT_ROUTE_ID_RE,
               ev_rid_field=_DEFAULT_ROUTE_ID_RE,

@@ -113,10 +113,10 @@ def parse_route_id(route_id):
     """Parses a route identifier into its component parts: SR, RRT, RRQ
     """
     # Convert integer to three-digit route ID.
-    if isinstance(route_id, (int, long)):
+    if isinstance(route_id, int):
         return ("%03d" % route_id, None, None)
     # Convert non-string to string.
-    if not isinstance(route_id, (unicode, str)):
+    if not isinstance(route_id, str):
         route_id = str(route_id)
 
     if re.match(r"^\d{1,2}$", route_id):
@@ -127,5 +127,4 @@ def parse_route_id(route_id):
         raise SRFormatError(route_id)
     if match:
         parts = map(match.group, ("sr", "rrt", "rrq"))
-        parts = map(unicode, parts)
         return tuple(parts)
