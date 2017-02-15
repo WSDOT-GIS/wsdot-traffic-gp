@@ -16,7 +16,6 @@ from ..resturls import URLS
 from .domaintools import add_domain
 from ..jsonhelpers import CustomEncoder
 
-
 def _get_json_dir():
     return dirname(__file__)
 
