@@ -53,7 +53,10 @@ def get_traveler_info_json(dataname, accesscode=_DEFAULT_ACCESS_CODE):
     @rtype: list
     """
     if not accesscode:
-        raise TypeError(_NO_CODE_MESSAGE)
+        if _DEFAULT_ACCESS_CODE:
+            accesscode = _DEFAULT_ACCESS_CODE
+        else:
+            raise TypeError(_NO_CODE_MESSAGE)
     url = "%s?AccessCode=%s" % (URLS[dataname], accesscode)
     with urlopen(url) as json_file:
         output = json_file.read()

@@ -17,6 +17,7 @@ import arcpy
 from wsdottraffic import URLS, get_traveler_info
 from wsdottraffic.gp import create_table
 
+
 def main(out_gdb_path="./TravelerInfo.gdb", access_code=None,
          templates_gdb=None):
     """Uses this when run as a script
