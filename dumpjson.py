@@ -5,7 +5,7 @@ Returns data from the WSDOT Traveler Info REST endpoints.
 Parameters:
 1    data name
 2    WSDOT Traffic API access code (optional if default is set via
-     WSDOT_TRAFFIC_API_CODE environment variable or accesscode.txt file.)
+     WSDOT_TRAFFIC_API_CODE environment variable.)
 '''
 
 import sys

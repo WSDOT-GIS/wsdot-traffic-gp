@@ -10,10 +10,7 @@ Setup
 Before using `travelerinfogp.py` you should run the `createtemplates.py` script.  This will create the `Data\Templates.gdb` file geodatabase.
 
 ### Default access code ###
-You can set a default access code, so you don't need to provide it via function parameter, in the following ways.
-
-* Create a file called `accesscode.txt` in the same directory as the scripts. This file should have a single line of text, which is the access code.
-* Set an environment variable called `WSDOT_TRAFFIC_API_CODE` to the default access code.
+You can set a default access code, so you don't need to provide it via function parameter, by setting an environment variable called `WSDOT_TRAFFIC_API_CODE` to the default access code.
 
 Scripts
 -------

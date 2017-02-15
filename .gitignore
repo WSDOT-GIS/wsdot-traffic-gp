@@ -2,7 +2,6 @@
 
 login-info.json
 
-accesscode.txt
 *.pyc
 *.gdb
 *.gdb.zip

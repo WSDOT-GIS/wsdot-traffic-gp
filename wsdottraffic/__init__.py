@@ -23,12 +23,8 @@ else:
     from urllib.error import HTTPError
 
 # Get default access code
-_ACCESS_CODE_FILENAME = "accesscode.txt"
 _ENVIRONMENT_VAR_NAME = "WSDOT_TRAFFIC_API_CODE"
-if os.path.exists(_ACCESS_CODE_FILENAME):
-    with open(_ACCESS_CODE_FILENAME, "r") as ac_file:
-        _DEFAULT_ACCESS_CODE = ac_file.read()
-elif _ENVIRONMENT_VAR_NAME in os.environ:
+if _ENVIRONMENT_VAR_NAME in os.environ:
     _DEFAULT_ACCESS_CODE = os.environ[_ENVIRONMENT_VAR_NAME]
 else:
     _DEFAULT_ACCESS_CODE = None
