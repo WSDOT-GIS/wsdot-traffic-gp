@@ -1,12 +1,7 @@
 '''travelerinfo
 Returns data from the WSDOT Traveler Info REST endpoints.
-@author: Jeff Jacobson
-
-Parameters:
-1    data name
-2    WSDOT Traffic API access code (optional if default is set via
-     WSDOT_TRAFFIC_API_CODE environment variable or accesscode.txt file.)
 '''
+
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
