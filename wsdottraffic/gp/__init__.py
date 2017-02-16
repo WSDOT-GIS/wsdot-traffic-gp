@@ -180,7 +180,7 @@ Value is %s
                     raise
                 else:
                     rowcounter += 1
-        warnings.warn("Added %(rowcounter)d rows to %(table_path)s. Failed to add %(failcounter)d rows." % {
+        logging.info("Added %(rowcounter)d rows to %(table_path)s. Failed to add %(failcounter)d rows." % {
             "rowcounter": rowcounter, "table_path": table_path,
             "failcounter": failcounter})
 
