@@ -7,7 +7,8 @@ from os.path import join, dirname
 import re
 import json
 import zipfile
-from sys import stderr
+import warnings
+import logging
 
 import arcpy
 from ..parseutils import split_camel_case
@@ -15,6 +16,8 @@ from .. import get_traveler_info
 from ..resturls import URLS
 from .domaintools import add_domain
 from ..jsonhelpers import CustomEncoder
+
+logging.getLogger(__name__)
 
 
 def _get_json_dir():
@@ -71,8 +74,10 @@ def create_table(table_path, table_def_dict=None, data_list=None,
                 arcpy.Exists(
                     os.path.join(templates_workspace, table_name))):
             template_path = os.path.join(templates_workspace, table_name)
-            stderr.write("Creating table %s using template %s...\n" %
-                         (table_path, template_path))
+            logging.info(
+                "Creating table %(table_path)s using template \
+%s(template_path)...",
+                {"table_path": table_path, "template_path": template_path})
             if is_point:
                 arcpy.management.CreateFeatureclass(
                     workspace, fc_name, "POINT", template_path,
@@ -81,8 +86,9 @@ def create_table(table_path, table_def_dict=None, data_list=None,
                 arcpy.management.CreateTable(
                     workspace, fc_name, template=template_path)
         else:
-            stderr.write("Creating table %s...\n" % table_path)
-            arcpy.AddWarning(
+            logging.info("Creating table %(table_path)s...",
+                         {"table_path", table_path})
+            logging.warning(
                 "Creating table without a template.  Table creation would" +
                 "be faster if using a template.")
             if is_point:
@@ -92,23 +98,25 @@ def create_table(table_path, table_def_dict=None, data_list=None,
             else:
                 arcpy.management.CreateTable(workspace, fc_name)
 
-            stderr.write("Adding fields...\n")
+            logging.info("Adding fields...")
 
             _add_fields(field_dict, is_point, table_path)
             _add_domains(table_def_dict, table_path)
 
     else:
-        stderr.write("Truncating table %s...\n" % table_path)
+        logging.info("Truncating table %(table_path)s...",
+                     {"table_path": table_path})
         # Truncate the table if it already exists
         arcpy.management.DeleteRows(table_path)
 
     if data_list is not None:
         bad_value_re = re.compile(r"^(?P<error>.+) \[(?P<field>\w+)\]$",
                                   re.MULTILINE)
-        stderr.write("Adding data to table...\n")
+        logging.info("Adding data to table...")
         fields = list(field_dict.keys())
         if is_point:
-            map(fields.remove, ("Longitude", "Latitude"))
+            fields.remove("Longitude")
+            fields.remove("Latitude")
             fields.append("SHAPE@XY")
         rowcounter = 0
         failcounter = 0
@@ -120,8 +128,8 @@ def create_table(table_path, table_def_dict=None, data_list=None,
                             "Latitude" in item):
                         x, y = item["Longitude"], item["Latitude"]
                         if x == 0 or y == 0 or x is None or y is None:
-                            arcpy.AddWarning("Invalid coordinates. Setting to \
-NULL.\n%s" % json.dumps(item, cls=CustomEncoder, indent=4))
+                            logging.warning("Invalid coordinates. Setting to NULL.\n%(json)s", {
+                                            "json": json.dumps(item, cls=CustomEncoder)})
                             row.append(None)
                         else:
                             row.append((x, y))
@@ -137,6 +145,14 @@ NULL.\n%s" % json.dumps(item, cls=CustomEncoder, indent=4))
                     # tuple: ('ERROR 999999: Error executing function.\nThe row
                     # contains a bad value. [CVRestrictions]\nThe row contains
                     # a bad value. [RestrictionComment]',)
+
+                    ex_message = """Error inserting %(row)s into %(table)s, which has these fields: %(fields)s"""
+                    warnings.warn(ex_message % {
+                        "row": row,
+                        "table": table_name,
+                        "fields": fields
+                    })
+
                     if err_inst.args:
                         msg_template = """Bad value in [%s] field.
 Length is %s.
@@ -151,19 +167,22 @@ Value is %s
                             for match in matches:
                                 error_msg, field_name = match
                                 if field_name != table_name:
-                                    arcpy.AddWarning(msg_template % (
+                                    warnings.warn(msg_template % (
                                         field_name, len(item[field_name]),
                                         item[field_name], error_msg))
                                 else:
                                     pass
                     else:
-                        arcpy.AddWarning("Error adding row to table.\n%s\n%s" %
-                                         (err_inst, item))
+                        warnings.warn(
+                            "Error adding row to %(table).\n\
+%(err_inst)s\n%(item)s", {"table": table_name, "err_inst": err_inst, "item": item})
                     failcounter += 1
+                    raise
                 else:
                     rowcounter += 1
-        arcpy.AddWarning("Added %d rows to %s. Failed to add %d rows." %
-                         (rowcounter, table_path, failcounter))
+        warnings.warn("Added %(rowcounter)d rows to %(table_path)s. Failed to add %(failcounter)d rows." % {
+            "rowcounter": rowcounter, "table_path": table_path,
+            "failcounter": failcounter})
 
 
 def _add_fields(field_dict, is_point, table_path):

@@ -9,8 +9,5 @@
         "test*.py"
     ],
     "python.unitTest.unittestEnabled": true,
-    "[python]": {
-        "editor.wrappingColumn": 79
-    },
     "python.pythonPath": "C:/Program Files/ArcGIS/Pro/bin/Python/envs/arcgispro-py3/python"
 }

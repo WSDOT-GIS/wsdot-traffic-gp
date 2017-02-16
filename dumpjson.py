@@ -4,6 +4,7 @@ Returns data from the WSDOT Traveler Info REST endpoints.
 
 import os
 import json
+import logging
 from argparse import ArgumentParser
 
 from wsdottraffic import (URLS, _DEFAULT_ACCESS_CODE,
@@ -20,6 +21,8 @@ def _field_serializer(the_object):
 
 CODE = _DEFAULT_ACCESS_CODE
 OUTDIR = "output"
+
+logging.getLogger(__name__)
 
 
 def main():

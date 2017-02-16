@@ -4,6 +4,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import os
+import logging
 
 import arcpy
 
@@ -46,7 +47,7 @@ def add_domain(in_workspace, domain_name, domain_description=None,
         if replace_existing_domain:
             arcpy.management.DeleteDomain(in_workspace, domain_name)
         else:
-            arcpy.AddMessage('Domain "%s" already exists in "%s".' % (
+            logging.debug('Domain "%s" already exists in "%s".' % (
                 domain_name, os.path.basename(in_workspace)))
             return
 

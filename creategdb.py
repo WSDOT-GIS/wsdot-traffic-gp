@@ -10,12 +10,14 @@ Parameters:
 """
 import os
 import zipfile
-from sys import stderr
+import logging
 
 import arcpy
 
 from wsdottraffic import URLS, get_traveler_info
 from wsdottraffic.gp import create_table
+
+logging.getLogger(__name__)
 
 
 def main(out_gdb_path="./TravelerInfo.gdb", access_code=None,
@@ -26,11 +28,12 @@ def main(out_gdb_path="./TravelerInfo.gdb", access_code=None,
     # Create the file GDB if it does not already exist.
     arcpy.env.overwriteOutput = True
     if not arcpy.Exists(out_gdb_path):
+        logging.debug("Creating GDB")
         arcpy.management.CreateFileGDB(*os.path.split(out_gdb_path))
 
     # Download each of the REST endpoints.
     for name in URLS:
-        stderr.write("Contacting %s...\n" % URLS[name])
+        logging.info("Contacting %(url)s...", {"url": URLS[name]})
         # If user provided access code, use it.
         # Otherwise don't provide to function, which will use default from
         # environment or text file.`
@@ -40,14 +43,15 @@ def main(out_gdb_path="./TravelerInfo.gdb", access_code=None,
             data = get_traveler_info(name)
         out_table = os.path.join(out_gdb_path, name)
         create_table(out_table, None, data, templates_gdb)
-    stderr.write("Compressing data in %s\n..." % out_gdb_path)
+    logging.info("Compressing data in %(out_gdb_path)s...",
+                 {"out_gdb_path":  out_gdb_path})
 
     zip_path = "%s.zip" % out_gdb_path
-    stderr.write("Creating %s...\n" % zip_path)
+    logging.info("Creating %(zip_path)s...", {"zip_path", zip_path})
     if os.path.exists(zip_path):
         os.remove(zip_path)
     with zipfile.ZipFile(zip_path, "w") as out_zip:
-        stderr.write("Adding files to zip...\n")
+        logging.info("Adding files to zip...")
         for dirpath, dirnames, filenames in os.walk(out_gdb_path):
             del dirnames
             for file_name in filenames:
