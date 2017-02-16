@@ -23,9 +23,9 @@ else:
     from urllib.error import HTTPError
 
 # Get default access code
-_ENVIRONMENT_VAR_NAME = "WSDOT_TRAFFIC_API_CODE"
-if _ENVIRONMENT_VAR_NAME in os.environ:
-    _DEFAULT_ACCESS_CODE = os.environ[_ENVIRONMENT_VAR_NAME]
+ENVIRONMENT_VAR_NAME = "WSDOT_TRAFFIC_API_CODE"
+if ENVIRONMENT_VAR_NAME in os.environ:
+    _DEFAULT_ACCESS_CODE = os.environ[ENVIRONMENT_VAR_NAME]
 else:
     _DEFAULT_ACCESS_CODE = None
 

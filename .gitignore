@@ -1,6 +1,7 @@
-.vscode/launch.json
-
 login-info.json
+output
+
+.vscode/launch.json
 
 *.pyc
 *.gdb
@@ -13,14 +14,3 @@ login-info.json
 .ropeproject
 .vscode/launch.json
 
-BorderCrossings.json
-BridgeClearances.json
-CVRestrictions.json
-HighwayAlerts.json
-HighwayCameras.json
-MountainPassConditions.json
-TollRates.json
-TrafficFlow.json
-TravelTimes.json
-WeatherInformation.json
-WeatherStations.json
