@@ -29,7 +29,8 @@ def main():
         description="Dumps data from the WSDOT Traffic API to JSON files.")
     arg_parser.add_argument(
         "api-code", nargs="?",
-        help="WSDOT Traveler API code. This parameter can be omitted if the %s environment variable is defined." % ENVIRONMENT_VAR_NAME )
+        help="WSDOT Traveler API code. This parameter can be omitted if the %s\
+ environment variable is defined." % ENVIRONMENT_VAR_NAME)
     arg_parser.parse_args()
     # Create the output directory if not already present.
     if not os.path.exists(OUTDIR):
@@ -40,6 +41,7 @@ def main():
         # Get the features via the API.
         features = get_traveler_info(endpoint_name, CODE)
         data_dict[endpoint_name] = features
+        # Extract field definitions
         fields = FieldInfo.from_features(features)
         fields_dict[endpoint_name] = fields
 
@@ -48,8 +50,6 @@ def main():
     with open(out_path, 'w') as json_file:
         json.dump(data_dict, json_file, cls=CustomEncoder, indent=True)
 
-    # Extract field definitions
-    fields = FieldInfo.from_features(features)
     # Dump field defs. to JSON file
     out_path = os.path.join(OUTDIR, "fields.json")
     with open(out_path, "w") as json_file:

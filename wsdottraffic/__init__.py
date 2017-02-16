@@ -1,4 +1,4 @@
-'''travelerinfo
+'''wsdottraffic
 Returns data from the WSDOT Traveler Info REST endpoints.
 '''
 

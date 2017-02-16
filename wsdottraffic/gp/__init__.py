@@ -16,6 +16,7 @@ from ..resturls import URLS
 from .domaintools import add_domain
 from ..jsonhelpers import CustomEncoder
 
+
 def _get_json_dir():
     return dirname(__file__)
 
@@ -45,7 +46,7 @@ def create_table(table_path, table_def_dict=None, data_list=None,
         A dict that defines the fields that will be created.  If omitted, the
         fields will be determined by the table path.
     dataList : list, optional
-        A list of data returned from travelerinfo.get_traveler_info that will
+        A list of data returned from wsdottraffic.get_traveler_info that will
         be used to populate the table.
     templatesWorkspace : str, optional
         The path to a geodatabase containing template tables.  This will be
