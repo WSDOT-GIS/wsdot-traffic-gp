@@ -27,6 +27,50 @@ Consume the REST endpoints and return the results as a file geodatabase.
 #### wsdottraffic.armcalc  ####
 Consumes the ArmCalc web service.
 
+Scripts
+-------
+
+### creategdb.py ###
+
+* Downloads data from API
+* Creates feature class and tables if not already existing
+* If tables exist, truncates them
+* Inserts the data into feature classes and tables inside of a file geodatabase.
+* Zips the file geodatabase (which is a folder w/ `.gdb` extension).
+
+### createtemplates.py ###
+
+Creates a file geodatabase of template feature classes and tables. This script isn't really usually necessary, as the `creategdb.py` script will only create the tables if they don't already exist.
+
+### dumpjson.py ###
+
+Downloads data from API and exports JSON files: one with the data and one with automatically detected field definitions.
+
+### update.py ###
+
+Performs the same tasks as `creategdb.py`, then...
+
+* Logs into ArcGIS Online (AGOL)
+* Uploads zipped GDB to AGOL.
+* Publishes the uploaded GDB as a feature service
+
+#### Requirements ####
+
+Prior to running this script, you will need to create a file called `login-info.json` containing login username and password for an AGOL account.
+
+##### Example #####
+```json
+{
+    "username": "JohnQPublic",
+    "password": "Y0urP@55w0rd"
+}
+```
+
+### Unit tests (`test_*.py`) ###
+
+These are test scripts for use with the [unittest] Python module.
+
 [ArcGIS]:http://resources.arcgis.com/
 [docstrings]:https://en.wikipedia.org/wiki/Docstring#Python
+[unittest]:https://docs.python.org/3/library/unittest.html
 [WSDOT Traveler Information API]:http://www.wsdot.wa.gov/Traffic/api/
