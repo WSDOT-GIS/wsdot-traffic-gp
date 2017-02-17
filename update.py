@@ -77,7 +77,13 @@ def main():
         # Print list of items, one per line.
         print("\n\n".join(map(
             lambda sitem: "%s" % sitem, search_results)))
-        # TODO: Upload zipped GDB to update the existing content.
+        # Upload zipped GDB to update the existing content.
+        if len(search_results) == 1:
+            gdb_item = search_results[0]
+            print("Updating %s by uploading %s..." % (
+                gdb_item.title, _GDB_PATH))
+            gdb_item.update(data=_GDB_PATH)
+
 
 if __name__ == '__main__':
     main()
