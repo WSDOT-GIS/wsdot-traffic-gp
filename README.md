@@ -20,12 +20,20 @@ See the modules' [docstrings] for more details on how to use the scripts.
 This module provides the ability to query the REST endpoints and return the results as a dictionary.
 
 * Note that this script has no ArcGIS dependencies and can be run without any ArcGIS software installed.
+* Should run in either v2.7+ or v3.5.2+ of Python.
 
 #### wsdottraffic.gp ####
 Consume the REST endpoints and return the results as a file geodatabase.
 
+* Requires ArcPy
+* Should work with either ArcGIS Desktop or ArcGIS Pro, and the versions of Python that they come with.
+
 #### wsdottraffic.armcalc  ####
 Consumes the ArmCalc web service.
+
+* Should run in either v2.7+ or v3.5.2+ of Python.
+* No ArcGIS required.
+
 
 Scripts
 -------
@@ -53,24 +61,30 @@ Performs the same tasks as `creategdb.py`, then...
 * Logs into ArcGIS Online (AGOL)
 * Uploads zipped GDB to AGOL.
 * Publishes the uploaded GDB as a feature service
+* Inspired by the [Transportation 511](http://links.esri.com/stategovernment/help/transportation511) [overwrite-hosted-features](https://github.com/Esri/overwrite-hosted-features) script
 
 #### Requirements ####
 
-Prior to running this script, you will need to create a file called `login-info.json` containing login username and password for an AGOL account.
+* [ArcGIS Pro] 1.4 or higher
+* [ArcGIS API for Python]
+* Python 3.X (comes with ArcGIS Pro)
+* Prior to running this script, you will need to create a file called `login-info.json` containing login username and password for an AGOL account.
 
-##### Example #####
-```json
-{
-    "username": "JohnQPublic",
-    "password": "Y0urP@55w0rd"
-}
-```
+    ##### Example #####
+    ```json
+    {
+        "username": "JohnQPublic",
+        "password": "Y0urP@55w0rd"
+    }
+    ```
 
 ### Unit tests (`test_*.py`) ###
 
 These are test scripts for use with the [unittest] Python module.
 
 [ArcGIS]:http://resources.arcgis.com/
+[ArcGIS API for Python]:https://developers.arcgis.com/python/
+[ArcGIS Pro]:http://pro[.arcgis.co]m
 [docstrings]:https://en.wikipedia.org/wiki/Docstring#Python
 [unittest]:https://docs.python.org/3/library/unittest.html
 [WSDOT Traveler Information API]:http://www.wsdot.wa.gov/Traffic/api/
