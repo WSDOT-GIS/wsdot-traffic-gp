@@ -3,6 +3,9 @@ output
 
 .vscode/launch.json
 
+ImportLog
+Index
+
 *.pyc
 *.gdb
 *.gdb.zip
