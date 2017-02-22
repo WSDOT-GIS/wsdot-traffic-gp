@@ -5,15 +5,46 @@ Requires ArcGIS Pro installation to supply arcpy module
 import json
 from sys import stderr
 from os.path import exists
-import re
+from typing import Iterable
 
-from arcgis.gis import GIS
+from arcgis.gis import GIS, Item
 import creategdb
 
 _GDB_PATH = "TravelerInfo.gdb.zip"
 _LOGIN_JSON_PATH = "login-info.json"
 GDB_TITLE = "TravelerApi"
 FOLDER = "TravelerInfo"
+TAGS = ("WSDOT", "traffic", "traveler", "transportation")
+
+
+class PublishError(Exception):
+    """An exception raised when publishing to AGOL fails.
+    """
+
+    def __init__(self, parent_ex: Exception):
+        super().__init__(parent_ex.args)
+        # match = re.match(
+        #     r"Job (?:(?:failed)|(?:cancelled)|(?:timed out)).",
+        #     parent_ex.args[0], re.IGNORECASE)
+
+
+class MultipleResultsError(Exception):
+    """Raised when a search is performed and more than one
+    result is returned when only a singe result was expected.
+    """
+
+    def __init__(self, search_results: Iterable[Item]):
+        self.search_results = search_results
+        super().__init__(
+            "Too many results. Only a single result was expected.")
+
+
+class ItemAddFailError(Exception):
+    """Raised when failing to add an item to the GIS.
+    """
+
+    def __init__(self, parent_ex: RuntimeError):
+        super().__init__(parent_ex.args)
 
 
 def main():
@@ -37,53 +68,78 @@ def main():
 
     gis = GIS(**login_info)
 
+    # Create or get exising file GDB
+    traffic_gdb_item = _find_file_gdb(gis)
+    if not traffic_gdb_item:
+        traffic_gdb_item = _add_new_gdb(gis)
+
+    # Publish GDB to feature service or get exising service.
+    feature_service = _find_feature_svc(gis)
+    if not feature_service:
+        try:
+            feature_service = traffic_gdb_item.publish()
+        except Exception as ex:
+            # ArcGIS API throws a plain Exception, which is not recommended.
+            raise PublishError(ex)
+    else:
+        print("Updating %s by uploading %s..." % (traffic_gdb_item.title,
+                                                  _GDB_PATH))
+        traffic_gdb_item.update(data=_GDB_PATH)
+
+    # Create or update feature collection
+    feature_collection_item = _find_feature_collection(gis)
+    if feature_collection_item:
+        feature_collection_item.update(data=feature_service.url)
+    else:
+        feature_collection_item = _add_new_feature_collection(
+            gis, feature_service)
+
+
+def _search(gis, item_type):
     search_results = gis.content.search(
         query="%s owner:%s" % (GDB_TITLE, gis.properties.user.username),
-        item_type="File Geodatabase")
-
+        item_type=item_type)
     if len(search_results) <= 0:
-        try:
-            tags = ("WSDOT", "traffic", "traveler", "transportation")
-            traffic_gdb_item = gis.content.add({
-                "title": GDB_TITLE,
-                "type": "File Geodatabase",
-                "tags": ",".join(tags),
-                "culture": "en-US"
-            }, data=_GDB_PATH, folder=FOLDER)
-        except RuntimeError as ex:
-            stderr.write("Error uploading zipped file GDB.\n\t%s\n" % ex)
-            exit("%s" % ex)
-
-        try:
-            traffic_gdb_item.publish()
-        except Exception as ex:  # pylint:disable=broad-except
-            # The publish function throws just a regular old Exception
-            # if it fails. Check the message it has returned to see if it is
-            # on of the expected error messages.
-            match = re.match(
-                r"Job (?:(?:failed)|(?:cancelled)|(?:timed out)).",
-                ex.args[0], re.IGNORECASE)
-            if match:
-                stderr.write("Error publishing GDB as service:\n\t%s\n" %
-                             match.group(0))
-                exit("%s" % ex)
-            else:
-                # re-raise the exception if it is not one of the expected error
-                # messages
-                raise
-
+        return None
+    elif len(search_results) == 1:
+        return search_results[0]
     else:
-        print("items found")
-        # Print list of items, one per line.
-        print("\n\n".join(map(
-            lambda sitem: "%s" % sitem, search_results)))
-        # Upload zipped GDB to update the existing content.
-        if len(search_results) == 1:
-            gdb_item = search_results[0]
-            print("Updating %s by uploading %s..." % (
-                gdb_item.title, _GDB_PATH))
-            gdb_item.update(data=_GDB_PATH)
+        raise MultipleResultsError(search_results)
 
+
+def _find_file_gdb(gis: GIS):
+    return _search(gis, "Feature Layer")
+
+
+def _find_feature_svc(gis: GIS):
+    return _search(gis, "Feature Layer")
+
+
+def _find_feature_collection(gis: GIS):
+    return _search(gis, "Feature Collection")
+
+
+def _add_new_gdb(gis: GIS):
+    return _add_item(gis, "File Geodatabase", _GDB_PATH)
+
+
+def _add_new_feature_collection(gis: GIS, feature_service):
+    # TODO: this doesn't actually add the data. Figure out how to do so.
+    return _add_item(gis, "Feature Collection", feature_service.url)
+
+
+def _add_item(
+        gis: GIS, item_type: str, data: str, folder: str=FOLDER) -> Item:
+    try:
+        new_item = gis.content.add({
+            "title": GDB_TITLE,
+            "type": item_type,
+            "tags": ",".join(TAGS),
+            "culture": "en-US"
+        }, data=data, folder=folder)
+    except (RuntimeError, AttributeError) as ex:
+        raise ItemAddFailError(ex)
+    return new_item
 
 if __name__ == '__main__':
     main()
