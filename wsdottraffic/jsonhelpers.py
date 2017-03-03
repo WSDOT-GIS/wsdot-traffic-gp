@@ -111,7 +111,7 @@ def to_geo_json(dct):
         "type": "Feature",
     }
     prop_dict = {}
-    nonproperty_fields = []
+    nonproperty_fields = ()
     point_geo_fields = ("Longitude", "Latitude")
     multi_point_geo_fields = (
         "StartLongitude", "StartLatitude", "EndLongitude", "EndLatitude"
