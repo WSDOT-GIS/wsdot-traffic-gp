@@ -88,16 +88,21 @@ def main():
 
     # Create or update feature collection
     feature_collection_item = _find_feature_collection(gis)
-    if feature_collection_item:
-        feature_collection_item.update(data=feature_service.url)
-    else:
+    if not feature_collection_item:
         feature_collection_item = _add_new_feature_collection(
             gis, feature_service)
+    feature_collection_item.update(data=feature_service.url)
+
+ITEM_TYPE_FEATURE_LAYER = "Feature Layer"
+ITEM_TYPE_FILE_GDB = "File Geodatabase"
+ITEM_TYPE_FEATURE_COLLECTION = "Feature Collection"
 
 
-def _search(gis, item_type):
+def _search(gis: GIS, item_type: str, title: str=GDB_TITLE):
+    """Searches for items owned by the currently logged in user.
+    """
     search_results = gis.content.search(
-        query="%s owner:%s" % (GDB_TITLE, gis.properties.user.username),
+        query="%s owner:%s" % (title, gis.properties.user.username),
         item_type=item_type)
     if len(search_results) <= 0:
         return None
@@ -108,24 +113,24 @@ def _search(gis, item_type):
 
 
 def _find_file_gdb(gis: GIS):
-    return _search(gis, "Feature Layer")
+    return _search(gis, ITEM_TYPE_FILE_GDB)
 
 
 def _find_feature_svc(gis: GIS):
-    return _search(gis, "Feature Layer")
+    return _search(gis, ITEM_TYPE_FEATURE_LAYER)
 
 
 def _find_feature_collection(gis: GIS):
-    return _search(gis, "Feature Collection")
+    return _search(gis, ITEM_TYPE_FEATURE_COLLECTION)
 
 
 def _add_new_gdb(gis: GIS):
-    return _add_item(gis, "File Geodatabase", _GDB_PATH)
+    return _add_item(gis, ITEM_TYPE_FILE_GDB, _GDB_PATH)
 
 
 def _add_new_feature_collection(gis: GIS, feature_service):
     # TODO: this doesn't actually add the data. Figure out how to do so.
-    return _add_item(gis, "Feature Collection", feature_service.url)
+    return _add_item(gis, ITEM_TYPE_FEATURE_COLLECTION, feature_service.url)
 
 
 def _add_item(

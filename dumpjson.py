@@ -9,7 +9,7 @@ from argparse import ArgumentParser
 
 from wsdottraffic import (URLS, _DEFAULT_ACCESS_CODE,
                           get_traveler_info, ENVIRONMENT_VAR_NAME)
-from wsdottraffic.jsonhelpers import CustomEncoder
+from wsdottraffic.jsonhelpers import CustomEncoder, dict_list_to_geojson
 from wsdottraffic.fielddetection import FieldInfo
 
 
@@ -38,27 +38,27 @@ def main():
     # Create the output directory if not already present.
     if not os.path.exists(OUTDIR):
         os.mkdir(OUTDIR)
-    data_dict = {}
-    fields_dict = {}
     for endpoint_name in URLS:
         # Get the features via the API.
         features = get_traveler_info(endpoint_name, CODE)
-        data_dict[endpoint_name] = features
         # Extract field definitions
         fields = FieldInfo.from_features(features)
-        fields_dict[endpoint_name] = fields
 
-    # Dump features to JSON file
-    out_path = os.path.join(OUTDIR, "data.json")
-    with open(out_path, 'w') as json_file:
-        json.dump(data_dict, json_file, cls=CustomEncoder, indent=True)
+        # Write data and field info to JSON files.
+        out_path = os.path.join(OUTDIR, "%s.json" % endpoint_name)
+        with open(out_path, 'w') as json_file:
+            json.dump(
+                features, json_file, cls=CustomEncoder, indent=True)
+        out_path = os.path.join(OUTDIR, "%s_fields.json" % endpoint_name)
+        with open(out_path, 'w') as json_file:
+            json.dump(
+                fields, json_file, indent=True, default=_field_serializer)
 
-    # Dump field defs. to JSON file
-    out_path = os.path.join(OUTDIR, "fields.json")
-    with open(out_path, "w") as json_file:
-        json.dump(
-            fields_dict, json_file, indent=True, default=_field_serializer
-        )
-
+        # dump geojson
+        geojson = dict_list_to_geojson(features)
+        out_path = os.path.join(OUTDIR, "%s.geojson" % endpoint_name)
+        with open(out_path, 'w') as json_file:
+            json.dump(
+                geojson, json_file, cls=CustomEncoder, indent=True)
 if __name__ == '__main__':
     main()

@@ -60,8 +60,8 @@ def _simplfy_field_name(field_name):
 
 
 def parse_traveler_info_object(dct):
-    """This method is used by the json.load method to customize how the alerts
-    are deserialized.
+    """This method is used by the json.load method to customize how the
+    traffic info objects are deserialized.
     @type dct: dict
     @return: dictionary with flattened JSON output
     @rtype: dict
@@ -93,11 +93,74 @@ def parse_traveler_info_object(dct):
     return output
 
 
+def _dict_has_all_keys(dct, *keys):
+    for key in keys:
+        if key not in dct:
+            return False
+    return True
+
+
+def to_geo_json(dct):
+    """This method is used by the json.load method to customize how
+    the traffic info objects are deserialized.
+    @type dct: dict
+    @return: dictionary with GeoJSON output
+    @rtype: dict
+    """
+    outdict = {
+        "type": "Feature",
+    }
+    prop_dict = {}
+    nonproperty_fields = []
+    point_geo_fields = ("Longitude", "Latitude")
+    multi_point_geo_fields = (
+        "StartLongitude", "StartLatitude", "EndLongitude", "EndLatitude"
+    )
+    if _dict_has_all_keys(dct, *point_geo_fields):
+        outdict["geometry"] = {
+            "type": "Point",
+            "coordinates": [
+                dct["Longitude"],
+                dct["Latitude"]
+            ]
+        }
+        nonproperty_fields = point_geo_fields
+    elif _dict_has_all_keys(dct, *multi_point_geo_fields):
+        outdict["geometry"] = {
+            "type": "MultiPoint",
+            "coordinates": [
+                [dct["StartLongitude"], dct["StartLatitude"]],
+                [dct["EndLongitude"], dct["EndLatitude"]]
+            ]
+        }
+        nonproperty_fields = multi_point_geo_fields
+    for key, value in dct.items():
+        if key in nonproperty_fields:
+            continue
+        prop_dict[key] = value
+    outdict["properties"] = prop_dict
+    return outdict
+
+
+def dict_list_to_geojson(dicts):
+    """Converts a list of dicts, returned from parse_traveler_info_object
+    into a GeoJSON FeatureCollection.
+    """
+
+    output = {
+        "type": "FeatureCollection",
+        "features": list(map(to_geo_json, dicts))
+    }
+
+    return output
+
+
 class CustomEncoder(json.JSONEncoder):
     """Used for controlling formatting.
     Outputs dates as ISO format string.
     """
+
     def default(self, obj):  # pylint: disable=method-hidden
         if isinstance(obj, (datetime.datetime, datetime.date, datetime.time)):
             return obj.isoformat()
-        return super(CustomEncoder, self).default(obj)
+        return super().default(obj)
