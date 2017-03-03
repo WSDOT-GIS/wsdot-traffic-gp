@@ -155,11 +155,14 @@ def create_table(table_path, table_def_dict=None, data_list=None,
             logging.warning(
                 "Creating table without a template.  Table creation would " +
                 "be faster if using a template.")
+            ignored_fields = ()
             if is_point:
+                ignored_fields = POINT_FIELD_NAMES
                 arcpy.management.CreateFeatureclass(
                     workspace, fc_name, "POINT",
                     spatial_reference=arcpy.SpatialReference(4326))
             elif is_multipoint:
+                ignored_fields = MULTIPOINT_FIELD_NAMES
                 arcpy.management.CreateFeatureclass(
                     workspace, fc_name, "MULTIPOINT",
                     spatial_reference=arcpy.SpatialReference(4326))
@@ -168,7 +171,7 @@ def create_table(table_path, table_def_dict=None, data_list=None,
 
             logging.info("Adding fields...")
 
-            _add_fields(field_dict, table_path)
+            _add_fields(field_dict, table_path, ignored_fields)
             _add_domains(table_def_dict, table_path)
 
     else:
@@ -182,6 +185,7 @@ def create_table(table_path, table_def_dict=None, data_list=None,
                                   re.MULTILINE)
         logging.info("Adding data to table...")
         fields = list(field_dict.keys())
+
         if is_multipoint:
             for field in MULTIPOINT_FIELD_NAMES:
                 fields.remove(field)
@@ -270,18 +274,24 @@ def create_table(table_path, table_def_dict=None, data_list=None,
                 "failcounter": failcounter})
 
 
-def _add_fields(field_dict, table_path):
+def _add_fields(field_dict, table_path, ignored_fields=None):
     """Adds fields to a table
-    """
-    # skipped_fields_re = re.compile(
-    #     r"^((Begin)|(End))?L((ong)|(at))itude$", re.VERBOSE)
 
+    Parameters
+    ----------
+
+    field_dict
+        dict - a dict of dicts that describe fields to be added to the table.
+    table_path
+        str - The path of the table or feature class that the fields will be
+        added to.
+    ignored_fields (optional)
+        A set of field name strings that will NOT be added to the table.
+    """
     # Add the columns
     for key in field_dict:
-        # if skipped_fields_re.match(key):
-        #     # Don't add Long. or Lat. fields. These will be added as
-        #     # SHAPE@XY.
-        #     continue
+        if ignored_fields is not None and key in ignored_fields:
+            continue
         val = field_dict[key]
         if isinstance(val, dict):
             if "field_name" not in val:
