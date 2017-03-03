@@ -9,6 +9,7 @@ import json
 import re
 
 from .parseutils import parse_wcf_date
+from .dicttools import dict_has_all_keys
 
 
 def _simplfy_field_name(field_name):
@@ -92,14 +93,6 @@ def parse_traveler_info_object(dct):
                 output[simplified_key] = val
     return output
 
-
-def _dict_has_all_keys(dct, *keys):
-    for key in keys:
-        if key not in dct:
-            return False
-    return True
-
-
 def to_geo_json(dct):
     """This method is used by the json.load method to customize how
     the traffic info objects are deserialized.
@@ -116,7 +109,7 @@ def to_geo_json(dct):
     multi_point_geo_fields = (
         "StartLongitude", "StartLatitude", "EndLongitude", "EndLatitude"
     )
-    if _dict_has_all_keys(dct, *point_geo_fields):
+    if dict_has_all_keys(dct, *point_geo_fields):
         outdict["geometry"] = {
             "type": "Point",
             "coordinates": [
@@ -125,7 +118,7 @@ def to_geo_json(dct):
             ]
         }
         nonproperty_fields = point_geo_fields
-    elif _dict_has_all_keys(dct, *multi_point_geo_fields):
+    elif dict_has_all_keys(dct, *multi_point_geo_fields):
         outdict["geometry"] = {
             "type": "MultiPoint",
             "coordinates": [

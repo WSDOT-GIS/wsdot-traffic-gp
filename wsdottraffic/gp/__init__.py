@@ -16,6 +16,7 @@ from .. import get_traveler_info
 from ..resturls import URLS
 from .domaintools import add_domain
 from ..jsonhelpers import CustomEncoder
+from ..dicttools import dict_has_all_keys
 
 logging.getLogger(__name__)
 
@@ -34,6 +35,44 @@ with open(join(_get_json_dir(), "./domains.json"), "r") as domains_file:
 # TABLE_DEFS_DICT_DICT =
 with open(join(_get_json_dir(), "./tabledefs.json"), "r") as def_file:
     TABLE_DEFS_DICT_DICT = json.load(def_file)
+
+
+def _are_coords_valid(*coords):
+    for coord in coords:
+        if coord == 0 or coord is None:
+            return False
+    return True
+
+
+def _create_multipoint(*args):
+    """Creates an arcpy.Multipoint from a series of numbers with an even number
+    of elements.
+    """
+    if len(args) % 2 != 0:
+        raise ValueError("The number of arguments must be even.")
+    elif len(args) == 0:
+        return None
+
+    # Loop through the input numbers as XY pairs.
+    # Create an array of points.
+    i = 0
+    arc_array = arcpy.Array()
+    while i < len(args):
+        x = args[i]
+        i += 1
+        y = args[i]
+        i += 1
+        if not _are_coords_valid(x, y):
+            logging.warning("Invalid coordinates detected (%d, %d)", x, y)
+            continue
+        arc_array.add(arcpy.Point(x, y))
+
+    if len(arc_array) == 0:
+        return None
+
+    # Create a Multipoint using the point array.
+    shape = arcpy.Multipoint(arc_array)
+    return shape
 
 
 def create_table(table_path, table_def_dict=None, data_list=None,
@@ -55,14 +94,35 @@ def create_table(table_path, table_def_dict=None, data_list=None,
         The path to a geodatabase containing template tables.  This will be
         faster than using the AddField tool.
     """
+    # pylint:disable=invalid-name
+    POINT_X_FIELD = "Longitude"
+    POINT_Y_FIELD = "Latitude"
+
+    MULTIPOINT_X1_FIELD = "StartLongitude"
+    MULTIPOINT_Y1_FIELD = "StartLatitude"
+    MULTIPOINT_X2_FIELD = "EndLongitude"
+    MULTIPOINT_Y2_FIELD = "EndLatitude"
+
+    POINT_FIELD_NAMES = (POINT_X_FIELD, POINT_Y_FIELD)
+    MULTIPOINT_FIELD_NAMES = (MULTIPOINT_X1_FIELD, MULTIPOINT_Y1_FIELD,
+                              MULTIPOINT_X2_FIELD, MULTIPOINT_Y2_FIELD)
+    # pylint:enable=invalid-name
+
     table_name = os.path.split(table_path)[1]
 
     if table_def_dict is None:
         table_def_dict = TABLE_DEFS_DICT_DICT[table_name]
     field_dict = table_def_dict["fields"]
-    is_point = ("geometryType" in table_def_dict and
-                table_def_dict["geometryType"] == "POINT" and
-                "Longitude" in field_dict and "Latitude" in field_dict)
+    is_point = dict_has_all_keys(field_dict, *POINT_FIELD_NAMES)
+    is_multipoint = dict_has_all_keys(field_dict, *MULTIPOINT_FIELD_NAMES)
+    if not (is_point or is_multipoint):
+        raise ValueError(
+            "%s does not contain fields necessary for Shape" %
+            field_dict.keys())
+    elif is_point and is_multipoint:
+        # If input contains fields for both shape types,
+        # pick one, since feature class can't have both.
+        is_point = False
 
     # Create the table if it does not already exist.
     if not arcpy.Exists(table_path):
@@ -75,12 +135,16 @@ def create_table(table_path, table_def_dict=None, data_list=None,
                     os.path.join(templates_workspace, table_name))):
             template_path = os.path.join(templates_workspace, table_name)
             logging.info(
-                "Creating table %(table_path)s using template \
-%s(template_path)...",
+                "Creating table %(table_path)s using template " +
+                "%s(template_path)...",
                 {"table_path": table_path, "template_path": template_path})
             if is_point:
                 arcpy.management.CreateFeatureclass(
                     workspace, fc_name, "POINT", template_path,
+                    "SAME_AS_TEMPLATE", "SAME_AS_TEMPLATE", template_path)
+            elif is_multipoint:
+                arcpy.management.CreateFeatureclass(
+                    workspace, fc_name, "MULTIPOINT", template_path,
                     "SAME_AS_TEMPLATE", "SAME_AS_TEMPLATE", template_path)
             else:
                 arcpy.management.CreateTable(
@@ -89,18 +153,22 @@ def create_table(table_path, table_def_dict=None, data_list=None,
             logging.info("Creating table %(table_path)s...",
                          {"table_path", table_path})
             logging.warning(
-                "Creating table without a template.  Table creation would" +
+                "Creating table without a template.  Table creation would " +
                 "be faster if using a template.")
             if is_point:
                 arcpy.management.CreateFeatureclass(
                     workspace, fc_name, "POINT",
+                    spatial_reference=arcpy.SpatialReference(4326))
+            elif is_multipoint:
+                arcpy.management.CreateFeatureclass(
+                    workspace, fc_name, "MULTIPOINT",
                     spatial_reference=arcpy.SpatialReference(4326))
             else:
                 arcpy.management.CreateTable(workspace, fc_name)
 
             logging.info("Adding fields...")
 
-            _add_fields(field_dict, is_point, table_path)
+            _add_fields(field_dict, table_path)
             _add_domains(table_def_dict, table_path)
 
     else:
@@ -114,9 +182,13 @@ def create_table(table_path, table_def_dict=None, data_list=None,
                                   re.MULTILINE)
         logging.info("Adding data to table...")
         fields = list(field_dict.keys())
-        if is_point:
-            fields.remove("Longitude")
-            fields.remove("Latitude")
+        if is_multipoint:
+            for field in MULTIPOINT_FIELD_NAMES:
+                fields.remove(field)
+            fields.append("SHAPE@")
+        elif is_point:
+            for field in POINT_FIELD_NAMES:
+                fields.remove(field)
             fields.append("SHAPE@XY")
         rowcounter = 0
         failcounter = 0
@@ -124,15 +196,24 @@ def create_table(table_path, table_def_dict=None, data_list=None,
             for item in data_list:
                 row = []
                 for key in fields:
-                    if (key == "SHAPE@XY" and "Longitude" in item and
-                            "Latitude" in item):
-                        x, y = item["Longitude"], item["Latitude"]
-                        if x == 0 or y == 0 or x is None or y is None:
-                            logging.warning("Invalid coordinates. Setting to NULL.\n%(json)s", {
-                                            "json": json.dumps(item, cls=CustomEncoder)})
+                    if (key == "SHAPE@XY" and
+                            dict_has_all_keys(item, *POINT_FIELD_NAMES)):
+                        x, y = map(item.get, POINT_FIELD_NAMES, (None,) * 2)
+                        if not _are_coords_valid(x, y):
+                            logging.warning(
+                                "Invalid coordinates. Setting to NULL.\n" +
+                                "%(json)s", {
+                                    "json": json.dumps(item, cls=CustomEncoder)
+                                })
                             row.append(None)
                         else:
                             row.append((x, y))
+                    elif (key == "SHAPE@" and
+                          dict_has_all_keys(item, *MULTIPOINT_FIELD_NAMES)):
+                        x1, y1, x2, y2 = map(
+                            item.get, MULTIPOINT_FIELD_NAMES, (None,) * 4)
+                        shape = _create_multipoint(x1, y1, x2, y2)
+                        row.append(shape)
                     elif key not in item:
                         row.append(None)
                     else:
@@ -146,7 +227,8 @@ def create_table(table_path, table_def_dict=None, data_list=None,
                     # contains a bad value. [CVRestrictions]\nThe row contains
                     # a bad value. [RestrictionComment]',)
 
-                    ex_message = """Error inserting %(row)s into %(table)s, which has these fields: %(fields)s"""
+                    ex_message = ("Error inserting %(row)s into %(table)s, " +
+                                  "which has these fields: %(fields)s")
                     warnings.warn(ex_message % {
                         "row": row,
                         "table": table_name,
@@ -154,11 +236,9 @@ def create_table(table_path, table_def_dict=None, data_list=None,
                     })
 
                     if err_inst.args:
-                        msg_template = """Bad value in [%s] field.
-Length is %s.
-Value is %s
-%s
-"""
+                        msg_template = ("Bad value in [%s] field.\n" +
+                                        "Length is %s.\n" +
+                                        "Value is %s\n" + "%s")
                         for arg in err_inst.args:
                             matches = bad_value_re.findall(arg)
                             # [(u'The row contains a bad value.',
@@ -174,28 +254,34 @@ Value is %s
                                     pass
                     else:
                         warnings.warn(
-                            "Error adding row to %(table).\n\
-%(err_inst)s\n%(item)s", {"table": table_name, "err_inst": err_inst, "item": item})
+                            "Error adding row to %(table).\n" +
+                            "%(err_inst)s\n%(item)s", {
+                                "table": table_name,
+                                "err_inst": err_inst,
+                                "item": item})
                     failcounter += 1
                     raise
                 else:
                     rowcounter += 1
-        logging.info("Added %(rowcounter)d rows to %(table_path)s. Failed to add %(failcounter)d rows.", {
-            "rowcounter": rowcounter, "table_path": table_path,
-            "failcounter": failcounter})
+        logging.info(
+            "Added %(rowcounter)d rows to %(table_path)s." +
+            " Failed to add %(failcounter)d rows.", {
+                "rowcounter": rowcounter, "table_path": table_path,
+                "failcounter": failcounter})
 
 
-def _add_fields(field_dict, is_point, table_path):
+def _add_fields(field_dict, table_path):
     """Adds fields to a table
     """
-    skipped_fields_re = re.compile(r"^L((ong)|(at))itude$", re.VERBOSE)
+    # skipped_fields_re = re.compile(
+    #     r"^((Begin)|(End))?L((ong)|(at))itude$", re.VERBOSE)
 
     # Add the columns
     for key in field_dict:
-        if is_point and skipped_fields_re.match(key):
-            # Don't add Long. or Lat. fields. These will be added as
-            # SHAPE@XY.
-            continue
+        # if skipped_fields_re.match(key):
+        #     # Don't add Long. or Lat. fields. These will be added as
+        #     # SHAPE@XY.
+        #     continue
         val = field_dict[key]
         if isinstance(val, dict):
             if "field_name" not in val:
