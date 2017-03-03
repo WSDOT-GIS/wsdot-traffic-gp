@@ -38,7 +38,7 @@ def _simplfy_field_name(field_name):
             (?:Start)|
             (?:Begin)
         )|(?P<end>End)
-    )\w+(?P<prop_desc>
+    )\w*(?P<prop_desc>
         (RoadName)|
         (Longitude)|
         (Latitude)|
