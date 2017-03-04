@@ -1,6 +1,5 @@
 {
     "BorderCrossings": {
-        "geometryType": "POINT",
         "fields": {
             "Description": "TEXT",
             "Direction": "TEXT",
@@ -132,7 +131,6 @@
         }
     },
     "HighwayCameras": {
-        "geometryType": "POINT",
         "fields": {
             "CameraID": "LONG",
             "LocationDescription": "TEXT",
@@ -161,10 +159,12 @@
             "Region": "TEXT",
             "SortOrder": "SHORT",
             "Title": "TEXT"
+        },
+        "domains": {
+            "IsActive": "Boolean"
         }
     },
     "MountainPassConditions": {
-        "geometryType": "POINT",
         "fields": {
             "DateUpdated": "DATE",
             "ElevationInFeet": "LONG",
@@ -189,7 +189,6 @@
         }
     },
     "TollRates": {
-        "geometryType": "POINT",
         "fields": {
             "SignName": "TEXT",
             "TripName": "TEXT",
@@ -208,7 +207,6 @@
         }
     },
     "TrafficFlow": {
-        "geometryType": "POINT",
         "fields": {
             "FlowDataID": "LONG",
             "FlowReadingValue": "SHORT",
@@ -250,7 +248,6 @@
         }
     },
     "WeatherInformation": {
-        "geometryType": "POINT",
         "fields": {
             "StationID": "LONG",
             "StationName": "TEXT",
@@ -273,7 +270,6 @@
         }
     },
     "WeatherStations": {
-        "geometryType": "POINT",
         "fields": {
             "StationCode": "LONG",
             "StationName": "TEXT",
