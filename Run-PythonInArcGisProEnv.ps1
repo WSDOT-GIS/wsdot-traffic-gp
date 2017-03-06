@@ -14,9 +14,10 @@ Param(
     $PythonScript="creategdb.py"
 )
 
+# Find the ArcGIS Pro Python environment (defined by Conda).
 [System.IO.DirectoryInfo]$ProEnvFolder = "$env:ProgramFiles\ArcGIS\Pro\bin\Python\envs\arcgispro-py3"
+# Get the Python executable from that folder.
 [System.IO.FileInfo]$pythonexe = Get-ChildItem $ProEnvFolder "python.exe"
 
-Set-Location $PSScriptRoot
-
+# Start the Python script's execution, using the full path to the Python exe.
 Start-Process -FilePath $pythonexe.FullName -ArgumentList $PythonScript -NoNewWindow -PassThru -Wait
