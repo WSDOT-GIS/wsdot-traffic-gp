@@ -61,14 +61,6 @@ Downloads data from API and exports JSON files: one with the data and one with a
 * Python 3.X (comes with ArcGIS Pro)
 * Prior to running this script, you will need to create a file called `login-info.json` containing login username and password for an AGOL account.
 
-    ##### Example #####
-    ```json
-    {
-        "username": "JohnQPublic",
-        "password": "Y0urP@55w0rd"
-    }
-    ```
-
 ### Unit tests (`test_*.py`) ###
 
 These are test scripts for use with the [unittest] Python module.
