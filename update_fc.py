@@ -24,7 +24,7 @@ def main():
     hosted_layer_item = Item(gis, "9aa00fafb8fd49e59fef5fc995b75f8c")
     print("$s" % hosted_layer_item)
     feature_collection_item = Item(gis, "74f750d8e7d74db08cf4b133d3edc7f0")
-    print("$s", feature_collection_item)
+    print("$s" % feature_collection_item)
     # Everything above this line works correctly.
 
     # TODO: Export the hosted feature layer to feature collection,
