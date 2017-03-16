@@ -54,15 +54,6 @@ Creates a file geodatabase of template feature classes and tables. This script i
 
 Downloads data from API and exports JSON files: one with the data and one with automatically detected field definitions.
 
-### update.py ###
-
-Performs the same tasks as `creategdb.py`, then...
-
-* Logs into ArcGIS Online (AGOL)
-* Uploads zipped GDB to AGOL.
-* Publishes the uploaded GDB as a feature service
-* Inspired by the [Transportation 511](http://links.esri.com/stategovernment/help/transportation511) [overwrite-hosted-features](https://github.com/Esri/overwrite-hosted-features) script
-
 #### Requirements ####
 
 * [ArcGIS Pro] 1.4 or higher
