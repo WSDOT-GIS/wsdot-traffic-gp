@@ -21,7 +21,15 @@ logging.getLogger(__name__)
 
 
 def main(out_gdb_path="./TravelerInfo.gdb", access_code=None,
-         templates_gdb=None):
+         templates_gdb=None, names=(
+             "CVRestrictions",
+             "HighwayAlerts",
+             "HighwayCameras",
+             "MountainPassConditions",
+             "TrafficFlow",
+             "WeatherInformation",
+             "TravelTimes"
+         )):
     """Uses this when run as a script
     """
 
@@ -32,7 +40,7 @@ def main(out_gdb_path="./TravelerInfo.gdb", access_code=None,
         arcpy.management.CreateFileGDB(*os.path.split(out_gdb_path))
 
     # Download each of the REST endpoints.
-    for name in URLS:
+    for name in names:
         logging.info("Contacting %(url)s...", {"url": URLS[name]})
         # If user provided access code, use it.
         # Otherwise don't provide to function, which will use default from
