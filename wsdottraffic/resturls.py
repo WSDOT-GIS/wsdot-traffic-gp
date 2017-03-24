@@ -34,3 +34,7 @@ svc/GetCurrentWeatherInformationAsJson" % API_BASE,
     "%s/WeatherStations/WeatherStationsREST.svc/GetCurrentStationsAsJson" %
     API_BASE
 }
+
+ALERT_EVENT_CATEGORIES_URL = (
+    "%s/HighwayAlerts/HighwayAlertsREST.svc/GetEventCategoriesAsJson" %
+    API_BASE)
