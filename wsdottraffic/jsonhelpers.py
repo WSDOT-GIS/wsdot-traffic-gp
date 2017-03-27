@@ -10,6 +10,7 @@ import re
 
 from .parseutils import parse_wcf_date
 from .dicttools import dict_has_all_keys
+from .routeshields import label_to_3_digit_id
 
 
 def _simplfy_field_name(field_name):
@@ -68,6 +69,9 @@ def parse_traveler_info_object(dct):
     @rtype: dict
     """
     output = {}
+    bad_route_name = re.compile(r"^\D{1,2}[-\s]+\d{1,3}$")
+    road_name_field = re.compile(
+        r"^(?:(?:Start)|(?:End))?RoadName$", re.IGNORECASE)
     for key, val in dct.items():
         if isinstance(val, dict):
             # Roadway locations will be "flattened", since tables can't have
@@ -77,7 +81,12 @@ def parse_traveler_info_object(dct):
                 new_key = _simplfy_field_name(new_key)
                 if len(new_key) == 0 and val[roadway_location_key] is None:
                     continue
-                output[new_key] = val[roadway_location_key]
+                if (road_name_field.match(new_key) and
+                        bad_route_name.match(val[roadway_location_key])):
+                    output[new_key] = label_to_3_digit_id(
+                        val[roadway_location_key])
+                else:
+                    output[new_key] = val[roadway_location_key]
         else:
             simplified_key = _simplfy_field_name(key)
             if len(simplified_key) == 0 and val is None:
@@ -92,6 +101,7 @@ def parse_traveler_info_object(dct):
             else:
                 output[simplified_key] = val
     return output
+
 
 def to_geo_json(dct):
     """This method is used by the json.load method to customize how
