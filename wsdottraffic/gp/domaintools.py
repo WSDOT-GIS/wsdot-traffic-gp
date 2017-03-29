@@ -8,6 +8,8 @@ import logging
 
 import arcpy
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def add_domain(in_workspace, domain_name, domain_description=None,
                field_type="SHORT", domain_type="CODED", values=None,
@@ -47,7 +49,7 @@ def add_domain(in_workspace, domain_name, domain_description=None,
         if replace_existing_domain:
             arcpy.management.DeleteDomain(in_workspace, domain_name)
         else:
-            logging.debug('Domain "%s" already exists in "%s".' % (
+            _LOGGER.debug('Domain "%s" already exists in "%s".' % (
                 domain_name, os.path.basename(in_workspace)))
             return
 

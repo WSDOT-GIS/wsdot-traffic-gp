@@ -1,13 +1,12 @@
 <# Runs Python unit tests in multiple environments #>
 
 # Get python.exe paths.
-$pyenvs = Get-ChildItem -Path "C:\Python*" -Filter "python.exe" -Recurse
+[System.IO.FileInfo[]]$pyenvs = Get-Item "C:\Python*\**\python.exe"
 $pyenvs += Get-ChildItem -Path "C:\Program Files\ArcGIS" -Filter "python.exe" -Recurse
 
 # Build the list of modules that will be tested.
 $modules_to_test = [string]::Join(" ", @(
     "test_travelerinfo",
-    "test_armcalc",
     "test_routeshields"
     )
 )

@@ -18,11 +18,12 @@ from .domaintools import add_domain
 from ..jsonhelpers import CustomEncoder
 from ..dicttools import dict_has_all_keys
 
-logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 def _get_json_dir():
     return dirname(__file__)
+
 
 with open(join(_get_json_dir(), "./domains.json"), "r") as domains_file:
     DOMAINS = json.load(domains_file)
@@ -63,7 +64,7 @@ def _create_multipoint(*args):
         y = args[i]
         i += 1
         if not _are_coords_valid(x, y):
-            logging.warning("Invalid coordinates detected (%d, %d)", x, y)
+            _LOGGER.warning("Invalid coordinates detected (%d, %d)", x, y)
             continue
         arc_array.add(arcpy.Point(x, y))
 
@@ -74,9 +75,28 @@ def _create_multipoint(*args):
     shape = arcpy.Multipoint(arc_array)
     return shape
 
+class RouteLayerInfo(object):
+    def __init__(self, route_layer, route_field_name):
+        self.route_layer = route_layer
+        self.route_field_name = route_field_name
 
-def create_table(table_path, table_def_dict=None, data_list=None,
-                 templates_workspace=None):
+    def get_line_segment(self, route_id, measure1, measure2):
+        where_clause = "%s = '%s'" % (self.route_field_name, route_id)
+        out_line = None
+        with arcpy.da.SearchCursor(self.route_layer, ("SHAPE@",),
+                                   where_clause, sql_clause="TOP 1") as cursor:
+            for row in cursor:
+                route_line = row[0]
+                out_line = route_line.segmentAlongLine(measure1, measure2)
+                if out_line:
+                    break
+        return out_line
+
+
+def create_table(table_path: str, table_def_dict: dict=None,
+                 data_list: list=None,
+                 templates_workspace: str=None,
+                 route_layer: RouteLayerInfo=None):
     """Creates a table for one of the Traveler API REST Endpoints' data.
 
     Parameters
@@ -114,12 +134,12 @@ def create_table(table_path, table_def_dict=None, data_list=None,
         table_def_dict = TABLE_DEFS_DICT_DICT[table_name]
     field_dict = table_def_dict["fields"]
     is_point = dict_has_all_keys(field_dict, *POINT_FIELD_NAMES)
-    is_multipoint = dict_has_all_keys(field_dict, *MULTIPOINT_FIELD_NAMES)
-    if not (is_point or is_multipoint):
+    is_polyline = dict_has_all_keys(field_dict, *MULTIPOINT_FIELD_NAMES)
+    if not (is_point or is_polyline):
         raise ValueError(
             "%s does not contain fields necessary for Shape" %
             field_dict.keys())
-    elif is_point and is_multipoint:
+    elif is_point and is_polyline:
         # If input contains fields for both shape types,
         # pick one, since feature class can't have both.
         is_point = False
@@ -134,7 +154,7 @@ def create_table(table_path, table_def_dict=None, data_list=None,
                 arcpy.Exists(
                     os.path.join(templates_workspace, table_name))):
             template_path = os.path.join(templates_workspace, table_name)
-            logging.info(
+            _LOGGER.info(
                 "Creating table %(table_path)s using template " +
                 "%s(template_path)...",
                 {"table_path": table_path, "template_path": template_path})
@@ -142,7 +162,7 @@ def create_table(table_path, table_def_dict=None, data_list=None,
                 arcpy.management.CreateFeatureclass(
                     workspace, fc_name, "POINT", template_path,
                     "SAME_AS_TEMPLATE", "SAME_AS_TEMPLATE", template_path)
-            elif is_multipoint:
+            elif is_polyline:
                 arcpy.management.CreateFeatureclass(
                     workspace, fc_name, "MULTIPOINT", template_path,
                     "SAME_AS_TEMPLATE", "SAME_AS_TEMPLATE", template_path)
@@ -150,18 +170,18 @@ def create_table(table_path, table_def_dict=None, data_list=None,
                 arcpy.management.CreateTable(
                     workspace, fc_name, template=template_path)
         else:
-            logging.info("Creating table %(table_path)s...",
+            _LOGGER.info("Creating table %(table_path)s...",
                          {"table_path", table_path})
-            logging.warning(
-                "Creating table without a template.  Table creation would " +
-                "be faster if using a template.")
+            # _LOGGER.warning(
+            #     "Creating table without a template.  Table creation would " +
+            #     "be faster if using a template.")
             ignored_fields = ()
             if is_point:
                 ignored_fields = POINT_FIELD_NAMES
                 arcpy.management.CreateFeatureclass(
                     workspace, fc_name, "POINT",
                     spatial_reference=arcpy.SpatialReference(4326))
-            elif is_multipoint:
+            elif is_polyline:
                 ignored_fields = MULTIPOINT_FIELD_NAMES
                 arcpy.management.CreateFeatureclass(
                     workspace, fc_name, "MULTIPOINT",
@@ -169,13 +189,13 @@ def create_table(table_path, table_def_dict=None, data_list=None,
             else:
                 arcpy.management.CreateTable(workspace, fc_name)
 
-            logging.info("Adding fields...")
+            _LOGGER.info("Adding fields...")
 
             _add_fields(field_dict, table_path, ignored_fields)
             _add_domains(table_def_dict, table_path)
 
     else:
-        logging.info("Truncating table %(table_path)s...",
+        _LOGGER.info("Truncating table %(table_path)s...",
                      {"table_path": table_path})
         # Truncate the table if it already exists
         arcpy.management.DeleteRows(table_path)
@@ -183,10 +203,10 @@ def create_table(table_path, table_def_dict=None, data_list=None,
     if data_list is not None:
         bad_value_re = re.compile(r"^(?P<error>.+) \[(?P<field>\w+)\]$",
                                   re.MULTILINE)
-        logging.info("Adding data to table...")
+        _LOGGER.info("Adding data to table...")
         fields = list(field_dict.keys())
 
-        if is_multipoint:
+        if is_polyline:
             for field in MULTIPOINT_FIELD_NAMES:
                 fields.remove(field)
             fields.append("SHAPE@")
@@ -204,7 +224,7 @@ def create_table(table_path, table_def_dict=None, data_list=None,
                             dict_has_all_keys(item, *POINT_FIELD_NAMES)):
                         x, y = map(item.get, POINT_FIELD_NAMES, (None,) * 2)
                         if not _are_coords_valid(x, y):
-                            logging.warning(
+                            _LOGGER.warning(
                                 "Invalid coordinates. Setting to NULL.\n" +
                                 "%(json)s", {
                                     "json": json.dumps(item, cls=CustomEncoder)
@@ -267,7 +287,7 @@ def create_table(table_path, table_def_dict=None, data_list=None,
                     raise
                 else:
                     rowcounter += 1
-        logging.info(
+        _LOGGER.info(
             "Added %(rowcounter)d rows to %(table_path)s." +
             " Failed to add %(failcounter)d rows.", {
                 "rowcounter": rowcounter, "table_path": table_path,
