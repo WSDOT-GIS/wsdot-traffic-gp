@@ -63,10 +63,9 @@ def _create_multipoint(*args):
         i += 1
         y = args[i]
         i += 1
-        if not _are_coords_valid(x, y):
-            _LOGGER.warning("Invalid coordinates detected (%d, %d)", x, y)
-            continue
-        arc_array.add(arcpy.Point(x, y))
+        # Only add the coordinates if they are valid.
+        if _are_coords_valid(x, y):
+            arc_array.add(arcpy.Point(x, y))
 
     if len(arc_array) == 0:
         return None
@@ -75,7 +74,11 @@ def _create_multipoint(*args):
     shape = arcpy.Multipoint(arc_array)
     return shape
 
+
 class RouteLayerInfo(object):
+    """Uses a route layer to perform requests.
+    """
+
     def __init__(self, route_layer, route_field_name):
         self.route_layer = route_layer
         self.route_field_name = route_field_name
@@ -203,7 +206,7 @@ def create_table(table_path: str, table_def_dict: dict=None,
     if data_list is not None:
         bad_value_re = re.compile(r"^(?P<error>.+) \[(?P<field>\w+)\]$",
                                   re.MULTILINE)
-        _LOGGER.info("Adding data to table...")
+        _LOGGER.info("Adding data to %s...", table_path)
         fields = list(field_dict.keys())
 
         if is_polyline:
@@ -225,10 +228,10 @@ def create_table(table_path: str, table_def_dict: dict=None,
                         x, y = map(item.get, POINT_FIELD_NAMES, (None,) * 2)
                         if not _are_coords_valid(x, y):
                             _LOGGER.warning(
-                                "Invalid coordinates. Setting to NULL.\n" +
-                                "%(json)s", {
-                                    "json": json.dumps(item, cls=CustomEncoder)
-                                })
+                                "Invalid point coordinates. Setting to NULL." +
+                                "\n%s\n%s",
+                                table_path,
+                                json.dumps(item, cls=CustomEncoder))
                             row.append(None)
                         else:
                             row.append((x, y))
@@ -237,6 +240,17 @@ def create_table(table_path: str, table_def_dict: dict=None,
                         x1, y1, x2, y2 = map(
                             item.get, MULTIPOINT_FIELD_NAMES, (None,) * 4)
                         shape = _create_multipoint(x1, y1, x2, y2)
+
+                        if not shape:
+                            # If the multipoint fields didn't have valid
+                            # values, check for point field definitions.
+                            if dict_has_all_keys(*POINT_FIELD_NAMES):
+                                x, y = map(
+                                    item.get, POINT_FIELD_NAMES, (None,) * 2)
+                                shape = _create_multipoint(x, y)
+                            else:
+                                _LOGGER.warning("No valid multipoint\n%s\n%s",
+                                                table_path, item)
                         row.append(shape)
                     elif key not in item:
                         row.append(None)
