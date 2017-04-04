@@ -63,10 +63,9 @@ def _create_multipoint(*args):
         i += 1
         y = args[i]
         i += 1
-        # # Only add the coordinates if they are valid.
-        # if _are_coords_valid(x, y):
-        #     arc_array.add(arcpy.Point(x, y))
-        arc_array.add(arcpy.Point(x, y))
+        # Only add the coordinates if they are valid.
+        if _are_coords_valid(x, y):
+            arc_array.add(arcpy.Point(x, y))
 
     if len(arc_array) == 0:
         return None
@@ -227,16 +226,15 @@ def create_table(table_path: str, table_def_dict: dict=None,
                     if (key == "SHAPE@XY" and
                             dict_has_all_keys(item, *POINT_FIELD_NAMES)):
                         x, y = map(item.get, POINT_FIELD_NAMES, (None,) * 2)
-                        # if not _are_coords_valid(x, y):
-                        #     _LOGGER.warning(
-                        #         "Invalid point coordinates. Setting to NULL." +
-                        #         "\n%s\n%s",
-                        #         table_path,
-                        #         json.dumps(item, cls=CustomEncoder))
-                        #     row.append(None)
-                        # else:
-                        #     row.append((x, y))
-                        row.append((x, y))
+                        if not _are_coords_valid(x, y):
+                            _LOGGER.warning(
+                                "Invalid point coordinates. Setting to NULL." +
+                                "\n%s\n%s",
+                                table_path,
+                                json.dumps(item, cls=CustomEncoder))
+                            row.append(None)
+                        else:
+                            row.append((x, y))
                     elif (key == "SHAPE@" and
                           dict_has_all_keys(item, *MULTIPOINT_FIELD_NAMES)):
                         x1, y1, x2, y2 = map(
