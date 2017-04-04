@@ -63,7 +63,10 @@
             "EndMilePost": "SINGLE",
             "EndRoadName": "TEXT",
             "IsDetourAvailable": "SHORT",
-            "IsExceptionsAllowed": "SHORT",
+            "IsExceptionsAllowed": {
+                "field_alias": "Are exceptions allowed?",
+                "field_type": "SHORT"
+            },
             "IsPermanentRestriction": "SHORT",
             "IsWarning": "SHORT",
             "Latitude": "DOUBLE",
@@ -92,6 +95,13 @@
             "IsExceptionsAllowed": "Boolean",
             "IsPermanentRestriction": "Boolean",
             "IsWarning": "Boolean"
+        },
+        "geometryInfo": {
+            "geometryType": "POINT",
+            "fields": [
+                "Longitude",
+                "Latitude"
+            ]
         }
     },
     "HighwayAlerts": {

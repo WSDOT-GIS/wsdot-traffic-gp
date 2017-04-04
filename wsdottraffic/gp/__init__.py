@@ -117,7 +117,6 @@ def create_table(table_path: str, table_def_dict: dict=None,
         The path to a geodatabase containing template tables.  This will be
         faster than using the AddField tool.
     """
-    # pylint:disable=invalid-name
     POINT_X_FIELD = "Longitude"
     POINT_Y_FIELD = "Latitude"
 
@@ -129,15 +128,25 @@ def create_table(table_path: str, table_def_dict: dict=None,
     POINT_FIELD_NAMES = (POINT_X_FIELD, POINT_Y_FIELD)
     MULTIPOINT_FIELD_NAMES = (MULTIPOINT_X1_FIELD, MULTIPOINT_Y1_FIELD,
                               MULTIPOINT_X2_FIELD, MULTIPOINT_Y2_FIELD)
-    # pylint:enable=invalid-name
 
     table_name = os.path.split(table_path)[1]
 
     if table_def_dict is None:
         table_def_dict = TABLE_DEFS_DICT_DICT[table_name]
     field_dict = table_def_dict["fields"]
-    is_point = dict_has_all_keys(field_dict, *POINT_FIELD_NAMES)
-    is_polyline = dict_has_all_keys(field_dict, *MULTIPOINT_FIELD_NAMES)
+
+    # Check to see if geometry type and fields are explicitly specified.
+    if "geometryInfo" in table_def_dict:
+        geometry_info = table_def_dict["geometryInfo"]
+        is_point = re.match("POINT", geometry_info["geometryType"],
+                            re.IGNORECASE) is not None
+        if is_point:
+            if "fields" in geometry_info:
+                POINT_FIELD_NAMES = geometry_info["fields"]
+            is_polyline = False
+    else:
+        is_point = dict_has_all_keys(field_dict, *POINT_FIELD_NAMES)
+        is_polyline = dict_has_all_keys(field_dict, *MULTIPOINT_FIELD_NAMES)
     if not (is_point or is_polyline):
         raise ValueError(
             "%s does not contain fields necessary for Shape" %
