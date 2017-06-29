@@ -7,7 +7,6 @@ The scripts in this repository can be used to consume [WSDOT Traveler Informatio
 
 Setup
 -----
-Before using `wsdottraffic.gp` you should run the `createtemplates.py` script.  This will create the `Data\Templates.gdb` file geodatabase.
 
 ### Default access code ###
 You can set a default access code, so you don't need to provide it via function parameter, by setting an environment variable called `WSDOT_TRAFFIC_API_CODE` to the default access code.
@@ -54,20 +53,11 @@ Creates a file geodatabase of template feature classes and tables. This script i
 
 Downloads data from API and exports JSON files: one with the data and one with automatically detected field definitions.
 
-#### Requirements ####
-
-* [ArcGIS Pro] 1.4 or higher
-* [ArcGIS API for Python]
-* Python 3.X (comes with ArcGIS Pro)
-* Prior to running this script, you will need to create a file called `login-info.json` containing login username and password for an AGOL account.
-
 ### Unit tests (`test_*.py`) ###
 
 These are test scripts for use with the [unittest] Python module.
 
 [ArcGIS]:http://resources.arcgis.com/
-[ArcGIS API for Python]:https://developers.arcgis.com/python/
-[ArcGIS Pro]:http://pro[.arcgis.co]m
 [docstrings]:https://en.wikipedia.org/wiki/Docstring#Python
 [unittest]:https://docs.python.org/3/library/unittest.html
 [WSDOT Traveler Information API]:http://www.wsdot.wa.gov/Traffic/api/
