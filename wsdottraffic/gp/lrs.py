@@ -25,7 +25,7 @@ def _get_table_fields(table):
     if not hasattr(desc, "fields"):
         raise TypeError("Table description has no 'fields' property.")
     else:
-        return desc.fields  # pylint:disable=no-member
+        return desc.fields
 
 
 def _get_matching_field_name(table, field_re):
