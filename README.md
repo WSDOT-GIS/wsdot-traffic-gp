@@ -57,7 +57,12 @@ Downloads data from API and exports JSON files: one with the data and one with a
 
 These are test scripts for use with the [unittest] Python module.
 
+### PowerShell scripts for developers ###
+
+The PowerShell scripts are intended for use by developers working on this project and are not used by consumers of the library. Use the [Get-Help] command for more info on these scripts.
+
 [ArcGIS]:http://resources.arcgis.com/
 [docstrings]:https://en.wikipedia.org/wiki/Docstring#Python
+[Get-Help]:https://msdn.microsoft.com/en-us/powershell/reference/5.1/microsoft.powershell.core/get-help
 [unittest]:https://docs.python.org/3/library/unittest.html
 [WSDOT Traveler Information API]:http://www.wsdot.wa.gov/Traffic/api/
