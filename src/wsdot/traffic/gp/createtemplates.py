@@ -9,9 +9,9 @@ from os import path
 import logging
 
 import arcpy
-from wsdottraffic.gp import TABLE_DEFS_DICT_DICT, create_table
+from . import TABLE_DEFS_DICT_DICT, create_table
 
-logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 if __name__ == '__main__':
     # Get the .. directory

@@ -14,8 +14,8 @@ import logging
 
 import arcpy
 
-from wsdottraffic import URLS, get_traveler_info
-from wsdottraffic.gp import create_table
+from .. import URLS, get_traveler_info
+from . import create_table
 
 _LOGGER = logging.getLogger(__name__)
 

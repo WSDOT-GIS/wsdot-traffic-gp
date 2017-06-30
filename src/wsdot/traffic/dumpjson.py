@@ -7,10 +7,10 @@ import json
 import logging
 from argparse import ArgumentParser
 
-from wsdottraffic import (URLS, _DEFAULT_ACCESS_CODE,
-                          get_traveler_info, ENVIRONMENT_VAR_NAME)
-from wsdottraffic.jsonhelpers import CustomEncoder, dict_list_to_geojson
-from wsdottraffic.fielddetection import FieldInfo
+from . import (URLS, _DEFAULT_ACCESS_CODE,
+               get_traveler_info, ENVIRONMENT_VAR_NAME)
+from .jsonhelpers import CustomEncoder, dict_list_to_geojson
+from .fielddetection import FieldInfo
 
 
 def _field_serializer(the_object):
@@ -18,6 +18,7 @@ def _field_serializer(the_object):
         return the_object.__dict__
     else:
         return the_object
+
 
 CODE = _DEFAULT_ACCESS_CODE
 OUTDIR = "output"
@@ -60,5 +61,7 @@ def main():
         with open(out_path, 'w') as json_file:
             json.dump(
                 geojson, json_file, cls=CustomEncoder, indent=True)
+
+
 if __name__ == '__main__':
     main()
