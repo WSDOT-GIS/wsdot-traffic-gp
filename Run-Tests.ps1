@@ -12,10 +12,14 @@ $pyenvs += Get-ChildItem "$env:ProgramFiles\ArcGIS" "python.exe" -File -Recurse 
 # Initialize a hash table of error codes returned from the test. Only non-zero will be stored.
 [System.Diagnostics.Process[]]$jobs = $()
 
-Remove-Item "test_output\*"
+# Create directory for test output
+$test_output_dir = "test_output"
+New-Item $test_output_dir -ItemType Directory -ErrorAction Ignore | Write-Host
 
+# Name for progress activity
 $activity = "Running unittests"
-Write-Progress  $activity
+Write-Progress $activity
+
 # Loop through the paths to the various python executables.
 $i = 0
 foreach ($pypath in $pyenvs) {
@@ -38,5 +42,7 @@ for ($i = 0; $i -lt $jobs.Count; $i++) {
     }
     $jobResults.Add($path.FullName, $proc.ExitCode)
 }
+
+Remove-Item $test_output_dir
 
 return $jobResults
