@@ -2,4 +2,4 @@ language: python
 python:
     - "3.5"
     - "2.7"
-script: python -m unittest test_travelerinfo
+script: python -m unittest discover --start-directory src -p test_travelerinfo.py
