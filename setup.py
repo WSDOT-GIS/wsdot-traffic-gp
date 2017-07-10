@@ -1,20 +1,19 @@
 """Used to setup package file creation.
 """
-from setuptools import setup, find_packages
 from codecs import open as codec_open
 from os import path
+from setuptools import setup  # , find_packages
 
 HERE = path.abspath(path.dirname(__file__))
 
 with codec_open(path.join(HERE, "README.md"), encoding='utf-8') as f:
-    long_description = f.read()
-
+    LONG_DESC = f.read()
 
 setup(
-    name="wsdottraffic",
+    name="wsdot.traffic",
     version="1.0.0",
     description="Retrieves data from WSDOT Traffic API",
-    long_description=long_description,
+    long_description=LONG_DESC,
     url="https://github.com/WSDOT-GIS/wsdot-traffic-gp",
     author="Washington State Department of Transportation",
     license="Unlicense",
@@ -33,15 +32,20 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Topic :: Scientific/Engineering :: GIS"
     ],
-
-    packages=find_packages(),
+    package_dir={
+        'wsdot': 'src/wsdot'
+    },
+    packages=[
+        'wsdot.traffic',
+        'wsdot.traffic.gp'
+    ],  # find_packages(),
     entry_points={
         'console_scripts': [
-            'createwsdottrafficgdb = creategdb:main',
-            'dumpwsdottrafficjson = dumpjson:main'
+            'createwsdottrafficgdb = wsdot.traffic.gp.creategdb:main',
+            'dumpwsdottrafficjson = wsdot.traffic.dumpjson:main'
         ]
     },
     package_data={
-        'wsdottraffic.gp': ["*.json"]
+        'wsdot.traffic.gp': ["*.json"]
     }
 )

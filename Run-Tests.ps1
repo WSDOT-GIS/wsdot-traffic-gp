@@ -1,8 +1,13 @@
-<# Runs Python unit tests in multiple environments #>
+<#
+.SYNOPSIS
+    Runs Python unit tests in multiple environments
+.OUTPUTS
+    Hashtable. Keys are Python.exe paths, values are error code results from unittest. Non-zero error code means the unittest failed.
+#>
 
 # Get python.exe paths.
 [System.IO.FileInfo[]]$pyenvs = Get-Item "C:\Python*\**\python.exe"
-$pyenvs += Get-ChildItem -Path "C:\Program Files\ArcGIS\Pro\bin\Python\envs" -Filter "python.exe" -Recurse
+$pyenvs += Get-ChildItem "$env:ProgramFiles\ArcGIS" "python.exe" -File -Recurse | Where-Object { $_.FullName -notlike "*pkgs*" }
 
 # Initialize a hash table of error codes returned from the test. Only non-zero will be stored.
 [System.Diagnostics.Process[]]$jobs = $()
