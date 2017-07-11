@@ -2,7 +2,10 @@
 .SYNOPSIS
     Runs Python unit tests in multiple environments
 .OUTPUTS
-    Hashtable. Keys are Python.exe paths, values are error code results from unittest. Non-zero error code means the unittest failed.
+    Array of test results. Each item has
+        * Python Path
+        * Test return code
+        * Error message. (Only non-zero return codes will have a message)
 #>
 
 # Get python.exe paths.
@@ -32,15 +35,31 @@ Wait-Process -InputObject $jobs
 
 Write-Progress $activity -Completed
 
-$jobResults = @{}
+class TestResult {
+    [System.IO.FileInfo]$PythonPath
+    [int]$ReturnCode
+    [string]$ErrorMessage
+    TestResult($python, $returnCode, $errorMessage) {
+        $this.PythonPath = $python
+        $this.ReturnCode = $returnCode
+        $this.ErrorMessage = $errorMessage
+    }
+}
+
+[TestResult[]]$jobResults = $()
 
 for ($i = 0; $i -lt $jobs.Count; $i++) {
     $path = $pyenvs[$i]
     $proc = $jobs[$i]
-    if ($proc.ExitCode -eq 0) {
-        Remove-Item ".\test_output\Error$i.txt"
+    $errorFile = ".\test_output\Error$i.txt"
+
+    [string]$msg = $null
+    if ($proc.ExitCode -ne 0) {
+        $msg = Get-Content $errorFile -Raw
     }
-    $jobResults.Add($path.FullName, $proc.ExitCode)
+    Remove-Item $errorFile
+    $result = New-Object TestResult @($path.FullName, $proc.ExitCode, $msg)
+    $jobResults += $result
 }
 
 Remove-Item $test_output_dir
