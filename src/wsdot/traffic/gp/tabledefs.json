@@ -195,7 +195,10 @@
             },
             "TemperatureInFahrenheit": "SHORT",
             "TravelAdvisoryActive": "SHORT",
-            "WeatherCondition": "TEXT"
+            "WeatherCondition": {
+                "field_type": "TEXT",
+                "field_length": 500
+            }
         },
         "domains": {
             "TravelAdvisoryActive": "Boolean"
