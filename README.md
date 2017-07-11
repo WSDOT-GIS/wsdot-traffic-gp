@@ -37,6 +37,14 @@ Consumes the ArmCalc web service.
 Scripts
 -------
 
+### Notes for developers ###
+
+The example below shows how to run one of the scripts from within the project directory
+
+```console
+python -m src.wsdot.traffic.gp.creategdb
+```
+
 ### creategdb.py ###
 
 * Downloads data from API
