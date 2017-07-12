@@ -20,11 +20,12 @@ from ..dicttools import dict_has_all_keys
 
 _LOGGER = logging.getLogger(__name__)
 
-
+# JSON files are in the same directory as this script. This function
+# returns that directory.
 def _get_json_dir():
     return dirname(__file__)
 
-
+# Load list info for creating geodatabase domains.
 with open(join(_get_json_dir(), "./domains.json"), "r") as domains_file:
     DOMAINS = json.load(domains_file)
 
@@ -33,12 +34,17 @@ with open(join(_get_json_dir(), "./domains.json"), "r") as domains_file:
 # a dictionary with parameters for the arcpy.management.AddField function
 # (excluding in_table and field_name, which are already provided by the
 # dictionary keys).
-# TABLE_DEFS_DICT_DICT =
 with open(join(_get_json_dir(), "./tabledefs.json"), "r") as def_file:
     TABLE_DEFS_DICT_DICT = json.load(def_file)
 
 
 def _are_coords_valid(*coords):
+    """Returns False if a coordinate is either 0 or None, True otherwise.
+
+    Parameters
+    ----------
+    coords: one or more number values.
+    """
     for coord in coords:
         if coord == 0 or coord is None:
             return False
@@ -51,7 +57,7 @@ def _create_multipoint(*args):
     """
     if len(args) % 2 != 0:
         raise ValueError("The number of arguments must be even.")
-    elif len(args) == 0:
+    elif not args:
         return None
 
     # Loop through the input numbers as XY pairs.
@@ -67,7 +73,7 @@ def _create_multipoint(*args):
         if _are_coords_valid(x, y):
             arc_array.add(arcpy.Point(x, y))
 
-    if len(arc_array) == 0:
+    if not arc_array:
         return None
 
     # Create a Multipoint using the point array.
@@ -75,31 +81,9 @@ def _create_multipoint(*args):
     return shape
 
 
-class RouteLayerInfo(object):
-    """Uses a route layer to perform requests.
-    """
-
-    def __init__(self, route_layer, route_field_name):
-        self.route_layer = route_layer
-        self.route_field_name = route_field_name
-
-    def get_line_segment(self, route_id, measure1, measure2):
-        where_clause = "%s = '%s'" % (self.route_field_name, route_id)
-        out_line = None
-        with arcpy.da.SearchCursor(self.route_layer, ("SHAPE@",),
-                                   where_clause, sql_clause="TOP 1") as cursor:
-            for row in cursor:
-                route_line = row[0]
-                out_line = route_line.segmentAlongLine(measure1, measure2)
-                if out_line:
-                    break
-        return out_line
-
-
-def create_table(table_path: str, table_def_dict: dict=None,
-                 data_list: list=None,
-                 templates_workspace: str=None,
-                 route_layer: RouteLayerInfo=None):
+def create_table(table_path, table_def_dict=None,
+                 data_list=None,
+                 templates_workspace=None):
     """Creates a table for one of the Traveler API REST Endpoints' data.
 
     Parameters
