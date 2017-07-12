@@ -23,7 +23,7 @@ Start-Process pip "install git+https://github.com/WSDOT-GIS/wsdot-traffic-gp.git
 ```
 
 ### Default access code ###
-You can set a default access code, so you don't need to provide it via function parameter, by setting an environment variable called `WSDOT_TRAFFIC_API_CODE` to the default access code.
+You can set a default access code, so you don't need to provide it via function parameter or script argument, by setting an environment variable called `WSDOT_TRAFFIC_API_CODE` to the default access code.
 
 Modules
 -------
@@ -35,7 +35,7 @@ This module provides the ability to query the REST endpoints and return the resu
 * Note that this script has no ArcGIS dependencies and can be run without any ArcGIS software installed.
 * Should run in either v2.7+ or v3.5.2+ of Python.
 
-#### wsdot.traffic.gp ####
+### wsdot.traffic.gp ###
 Consume the REST endpoints and return the results as a file geodatabase.
 
 * Requires ArcPy
