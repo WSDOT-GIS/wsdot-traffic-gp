@@ -9,10 +9,11 @@
 #>
 
 # Get python.exe paths.
-[System.IO.FileInfo[]]$pyenvs = Get-Item "C:\Python*\**\python.exe"
+[System.IO.FileInfo[]]$pyenvs = Get-Item "C:\Python*\**\python.exe" # Python 2.x (ArcGIS Desktop)
+# Get the Python 3.X ArcGIS Pro Python executables, excluding the ones in the /pkgs/ folder.
 $pyenvs += Get-ChildItem "$env:ProgramFiles\ArcGIS" "python.exe" -File -Recurse | Where-Object { $_.FullName -notlike "*pkgs*" }
 
-# Initialize a hash table of error codes returned from the test. Only non-zero will be stored.
+# Initialize a list of Process objects.
 [System.Diagnostics.Process[]]$jobs = $()
 
 # Create directory for test output
