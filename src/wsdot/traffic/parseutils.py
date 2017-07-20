@@ -61,7 +61,7 @@ class SRFormatError(ValueError):
 
 
 def parse_wcf_date(wcf_date, throw_on_wrong_format=False):
-    """Parses a WCF serialzied date to a date string.
+    """Parses a WCF serialized date to a date string.
     :param wcf_date: A date/time in WCF JSON serialized format.
     :type wcf_date: str
     :param throw_on_wrong_format: Set to True to throw error on wrong format,
