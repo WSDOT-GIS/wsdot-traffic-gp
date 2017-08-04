@@ -11,7 +11,7 @@ with codec_open(path.join(HERE, "README.md"), encoding='utf-8') as f:
 
 setup(
     name="wsdot.traffic",
-    version="1.1.1",
+    version="1.2.0",
     description="Retrieves data from WSDOT Traffic API",
     long_description=LONG_DESC,
     url="https://github.com/WSDOT-GIS/wsdot-traffic-gp",
@@ -42,7 +42,8 @@ setup(
     entry_points={
         'console_scripts': [
             'createwsdottrafficgdb = wsdot.traffic.gp.creategdb:main',
-            'dumpwsdottrafficjson = wsdot.traffic.dumpjson:main'
+            'dumpwsdottrafficjson = wsdot.traffic.dumpjson:main',
+            'multipointtopoint = wsdot.traffic.gp.multipointtopoint:main'
         ]
     },
     package_data={
