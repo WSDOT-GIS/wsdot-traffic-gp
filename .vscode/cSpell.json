@@ -16,6 +16,7 @@
         "fgdb",
         "multipointtopoint",
         "pylint",
+        "rtype",
         "unittest"
     ],
     // flagWords - list of words to be always considered incorrect

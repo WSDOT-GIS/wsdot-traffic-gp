@@ -11,7 +11,7 @@ with codec_open(path.join(HERE, "README.md"), encoding='utf-8') as f:
 
 setup(
     name="wsdot.traffic",
-    version="1.2.0",
+    version="1.2.1",
     description="Retrieves data from WSDOT Traffic API",
     long_description=LONG_DESC,
     url="https://github.com/WSDOT-GIS/wsdot-traffic-gp",

@@ -13,7 +13,7 @@ from .dicttools import dict_has_all_keys
 from .routeshields import label_to_3_digit_id
 
 
-def _simplfy_field_name(field_name):
+def _simplify_field_name(field_name):
     """Returns simplified versions of field names from the API are
     unnecessarily complex.
     """
@@ -78,18 +78,19 @@ def parse_traveler_info_object(dct):
             # nested values.
             for roadway_location_key in val:
                 new_key = key + roadway_location_key
-                new_key = _simplfy_field_name(new_key)
-                if len(new_key) == 0 and val[roadway_location_key] is None:
+                new_key = _simplify_field_name(new_key)
+                if new_key and val.get(roadway_location_key) is None:
                     continue
                 if (road_name_field.match(new_key) and
+                        val.get(roadway_location_key) and
                         bad_route_name.match(val[roadway_location_key])):
                     output[new_key] = label_to_3_digit_id(
                         val[roadway_location_key])
                 else:
                     output[new_key] = val[roadway_location_key]
         else:
-            simplified_key = _simplfy_field_name(key)
-            if len(simplified_key) == 0 and val is None:
+            simplified_key = _simplify_field_name(key)
+            if simplified_key and val is None:
                 continue
             if simplified_key == "LocationID":
                 output[simplified_key] = "{%s}" % val
