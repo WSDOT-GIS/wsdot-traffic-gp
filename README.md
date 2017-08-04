@@ -77,6 +77,20 @@ or
 dumpwsdottrafficjson
 ```
 
+### wsdot.traffic.gp.multipointtopoint / multipointtopoint ###
+
+Calls the [Multipart to Singlepart] tool for each multipoint feature class in a geodatabase. Added feature classes will have the same name as its source, but with the added suffix *_singlepart*.
+
+```console
+python -m wsdot.traffic.gp.multipointtopoint YourGDBNameHere.gdb
+```
+
+or
+
+```console
+multipointtosinglepoint YourGDBNameHere.gdb
+```
+
 Notes for developers
 --------------------
 
@@ -98,5 +112,6 @@ The PowerShell scripts are intended for use by developers working on this projec
 [docstrings]:https://en.wikipedia.org/wiki/Docstring#Python
 [Get-Help]:https://msdn.microsoft.com/en-us/powershell/reference/5.1/microsoft.powershell.core/get-help
 [Installing Packages]:https://packaging.python.org/tutorials/installing-packages/
+[Multipart to Singlepart]:https://pro.arcgis.com/en/pro-app/tool-reference/data-management/multipart-to-singlepart.htm
 [unittest]:https://docs.python.org/3/library/unittest.html
 [WSDOT Traveler Information API]:http://www.wsdot.wa.gov/Traffic/api/
