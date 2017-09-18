@@ -16,6 +16,7 @@ setup(
     long_description=LONG_DESC,
     url="https://github.com/WSDOT-GIS/wsdot-traffic-gp",
     author="Washington State Department of Transportation",
+    author_email="WSDOTGISDevelopers@WSDOT.WA.GOV",
     license="Unlicense",
     classifiers=[
         'Development Status :: 5 - Production/Stable',
