@@ -44,7 +44,8 @@ setup(
             'createwsdottrafficgdb = wsdot.traffic.gp.creategdb:main',
             'createwsdottraffictemplategdb = wsdot.traffic.gp.createtemplates:main',
             'dumpwsdottrafficjson = wsdot.traffic.dumpjson:main',
-            'multipointtopoint = wsdot.traffic.gp.multipointtopoint:main'
+            'multipointtopoint = wsdot.traffic.gp.multipointtopoint:main',
+            'zipgdb = wsdot.traffic.gp.zipgdb:main'
         ]
     },
     package_data={

@@ -5,7 +5,7 @@ import argparse
 import arcpy
 
 
-def multipoint_to_point_fc(fgdb_path):
+def multipoint_to_point_fc(fgdb_path, preserve_multipoints=False):
     """Creates point feature classes corresponding to each multipoint feature class in a file geodatabase.
     """
     # TODO: Loop through feature classes.
@@ -38,6 +38,11 @@ def multipoint_to_point_fc(fgdb_path):
         for fc in mp_fc_list:
             out_name = "%s_singlepart" % fc
             arcpy.management.MultipartToSinglepart(fc, out_name)
+            arcpy.GetMessages()
+            # Delete the multipart version (unless preserve is True).
+            if not preserve_multipoints:
+                arcpy.management.Delete(fc)
+                arcpy.management.Rename(out_name, fc)
     finally:
         # restore old workspace
         arcpy.env.workspace = old_workspace
@@ -51,12 +56,14 @@ def main():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("file_geodatabase", help="Path to file geodatabase")
+    parser.add_argument("--preserve_multipoints", action="store_true", help="Using this flag will preserve the multipoint feature classes after the singlepoint versions are created. Otherwise, the singlepoint versions will replace the multipoint versions.")
 
     args = parser.parse_args()
 
     fgdb_path = args.file_geodatabase
+    preserve_multipoints = args.preserve_multipoints
 
-    multipoint_to_point_fc(fgdb_path)
+    multipoint_to_point_fc(fgdb_path, preserve_multipoints)
 
 if __name__ == '__main__':
     main()
