@@ -11,11 +11,12 @@ with codec_open(path.join(HERE, "README.md"), encoding='utf-8') as f:
 
 setup(
     name="wsdot.traffic",
-    version="1.3.0",
+    version="1.4.0",
     description="Retrieves data from WSDOT Traffic API",
     long_description=LONG_DESC,
     url="https://github.com/WSDOT-GIS/wsdot-traffic-gp",
     author="Washington State Department of Transportation",
+    author_email="WSDOTGISDevelopers@WSDOT.WA.GOV",
     license="Unlicense",
     classifiers=[
         'Development Status :: 5 - Production/Stable',

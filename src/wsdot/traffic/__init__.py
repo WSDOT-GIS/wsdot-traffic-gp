@@ -31,7 +31,7 @@ else:
 
 
 _NO_CODE_MESSAGE = "No access code provided. Must be provided either by \
-parameter or WSDOT_TRAFFIC_API_CODE enviroment variable."
+parameter or WSDOT_TRAFFIC_API_CODE environment variable."
 
 
 def get_traveler_info_json(dataname, accesscode=_DEFAULT_ACCESS_CODE):

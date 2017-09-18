@@ -10,7 +10,11 @@ if ($pythons.Length -lt 1) {
 }
 $python = $pythons[0].FullName
 
+Copy-Item .\README.md README
+
 Write-Progress "Creating Package files" -CurrentOperation "Creating source distribution..." -PercentComplete 0
 Start-Process $python "setup.py sdist" -Wait -WindowStyle Hidden
 Write-Progress "Creating Package files" -CurrentOperation "Creating Universal Wheel..." -PercentComplete 50
 Start-Process $python "setup.py bdist_wheel --universal" -Wait -WindowStyle Hidden
+
+Remove-item README
