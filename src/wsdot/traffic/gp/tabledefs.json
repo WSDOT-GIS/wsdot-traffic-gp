@@ -292,5 +292,44 @@
             "Latitude": "DOUBLE",
             "Longitude": "DOUBLE"
         }
+    },
+    "ScanwebWeatherReadings": {
+        "fields": {
+            "StationId": "TEXT",
+            "StationName": "TEXT",
+            "ReadingTime": "DATE",
+            "AirTemperature": "DOUBLE",
+            "RelativeHumidty": "SHORT",
+            "AverageWindSpeed": "SHORT",
+            "AverageWindDirection": "SHORT",
+            "WindGust": "SHORT",
+            "Visibility": "SHORT",
+            "PrecipitationIntensity": "SHORT",
+            "PrecipitationType": "SHORT",
+            "PrecipitationPast1Hour": "DOUBLE",
+            "PrecipitationPast3Hours": "DOUBLE",
+            "PrecipitationPast6Hours": "DOUBLE",
+            "PrecipitationPast12Hours": "DOUBLE",
+            "PrecipitationPast24Hours": "DOUBLE",
+            "PrecipitationAccumulation": "DOUBLE",
+            "BarometricPressure": "LONG",
+            "SnowDepth": "LONG"
+        }
+    },
+    "ScanwebSurfaceMeasurements": {
+        "fields": {
+            "StationName": "TEXT",
+            "SensorId": "SHORT",
+            "SurfaceTemperature": "DOUBLE",
+            "RoadFreezingTemperature": "DOUBLE",
+            "RoadSurfaceCondition": "LONG"
+        }
+    },
+    "ScanwebSubSurfaceMeasurements": {
+        "fields": {
+            "StationName": "TEXT",
+            "SensorId": "SHORT",
+            "SubSurfaceTemperature": "DOUBLE"
+        }
     }
 }

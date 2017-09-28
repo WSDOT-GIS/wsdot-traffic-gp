@@ -55,8 +55,7 @@ def _simplify_field_name(field_name):
     if match:
         if match.group("start"):
             return match.expand(r"Start\g<prop_desc>")
-        else:
-            return match.expand(r"End\g<prop_desc>")
+        return match.expand(r"End\g<prop_desc>")
 
     return field_name
 

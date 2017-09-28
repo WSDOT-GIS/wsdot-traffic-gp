@@ -4,6 +4,7 @@ results.
 """
 import os
 from os.path import join, dirname
+from collections import OrderedDict
 import re
 import json
 import zipfile
@@ -27,7 +28,7 @@ def _get_json_dir():
 
 # Load list info for creating geodatabase domains.
 with open(join(_get_json_dir(), "./domains.json"), "r") as domains_file:
-    DOMAINS = json.load(domains_file)
+    DOMAINS = json.load(domains_file, object_pairs_hook=OrderedDict)
 
 # This dictionary defines the fields in each table.  Each field's dictionary
 # entry can either contain a single string value indicating the field type, or
@@ -35,7 +36,7 @@ with open(join(_get_json_dir(), "./domains.json"), "r") as domains_file:
 # (excluding in_table and field_name, which are already provided by the
 # dictionary keys).
 with open(join(_get_json_dir(), "./tabledefs.json"), "r") as def_file:
-    TABLE_DEFS_DICT_DICT = json.load(def_file)
+    TABLE_DEFS_DICT_DICT = json.load(def_file, object_pairs_hook=OrderedDict)
 
 
 def _are_coords_valid(*coords):
