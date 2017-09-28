@@ -10,7 +10,6 @@ Parameters:
 """
 from __future__ import absolute_import, print_function, unicode_literals
 import os
-import zipfile
 import logging
 import argparse
 
@@ -95,20 +94,6 @@ def create_gdb(out_gdb_path="./TravelerInfo.gdb", access_code=None,
             data = get_traveler_info(name)
         out_table = os.path.join(out_gdb_path, name)
         create_table(out_table, None, data, templates_gdb)
-    # print("Compressing data in %s..." % out_gdb_path)
-
-    # zip_path = "%s.zip" % out_gdb_path
-    # print("Creating %s..." % zip_path)
-    # if os.path.exists(zip_path):
-    #     os.remove(zip_path)
-    # with zipfile.ZipFile(zip_path, "w") as out_zip:
-    #     print("Adding files to zip...")
-    #     for dirpath, dirnames, filenames in os.walk(out_gdb_path):
-    #         del dirnames
-    #         for file_name in filenames:
-    #             out_path = os.path.join(dirpath, file_name)
-    #             out_zip.write(out_path)
-
 
 if __name__ == '__main__':
     main()
