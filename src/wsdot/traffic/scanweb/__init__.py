@@ -67,14 +67,6 @@ class WeatherReading(object):
     List< ScanwebSubSurfaceMeasurements > 	SubSurfaceMeasurements [get, set]
     """
 
-    @property
-    def ScanwebSurfaceMeasurements(self):
-        return self._ScanwebSurfaceMeasurements
-
-    @property
-    def ScanwebSubSurfaceMeasurements(self):
-        return self._ScanwebSubSurfaceMeasurements
-
     def __init__(self, **kwargs):
         """
         Scanweb Weather Reading

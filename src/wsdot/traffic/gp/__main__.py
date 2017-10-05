@@ -18,9 +18,6 @@ import arcpy
 from .. import URLS, get_traveler_info
 from . import create_table
 
-_LOGGER = logging.getLogger(__name__)
-
-
 def main():
     """Uses this when run as a script
     """
@@ -34,11 +31,20 @@ def main():
     parser.add_argument("--gdb-path", type=str, default=default_gdb_path,
                         help='Path to where the GDB will be created. Defaults to "%s".' % default_gdb_path,
                         nargs="?")
-    parser.add_argument("--templates-gdb", help="Path to GDB with template feature classes. (Creating feature classes with templates is faster than using the Add Field tool.)")
+    parser.add_argument(
+        "--templates-gdb", help="Path to GDB with template feature classes. (Creating feature classes with templates is faster than using the Add Field tool.)")
     p_help = "WSDOT Traffic API code. Defaults to value of %s environment variable if available. If this environment variable does not exist, then this parameter is required." % api_code_var_name
     parser.add_argument("--code", "-c", type=str,
                         required=api_code is None, default=api_code,
                         help=p_help)
+    parser.add_argument("--log-level", choices=(
+        "CRITICAL",
+        "ERROR",
+        "WARNING",
+        "INFO",
+        "DEBUG",
+        "NOTSET"
+    ), default=logging.NOTSET)
 
     default_names = [
         "CVRestrictions",
@@ -52,9 +58,15 @@ def main():
 
     p_help = 'One or more of the following values: %s' % set(URLS.keys())
 
-    parser.add_argument("names", type=str, nargs=argparse.REMAINDER, help=p_help)
+    parser.add_argument("names", type=str,
+                        nargs=argparse.REMAINDER, help=p_help)
 
     args = parser.parse_args()
+    log_level = args.log_level
+    if log_level:
+        log_level = getattr(logging, args.log_level.upper())
+        logging.basicConfig(level=log_level)
+
     if not args.names:
         names = default_names
     else:
@@ -79,8 +91,10 @@ def create_gdb(out_gdb_path="./TravelerInfo.gdb", access_code=None,
     # Create the file GDB if it does not already exist.
     arcpy.env.overwriteOutput = True
     if not arcpy.Exists(out_gdb_path):
-        _LOGGER.debug("Creating GDB")
+        logging.debug("Creating GDB %s", out_gdb_path)
         arcpy.management.CreateFileGDB(*os.path.split(out_gdb_path))
+    else:
+        logging.debug("%s already exists. Skipping creation.", out_gdb_path)
 
     # Download each of the REST endpoints.
     for name in names:
@@ -94,6 +108,7 @@ def create_gdb(out_gdb_path="./TravelerInfo.gdb", access_code=None,
             data = get_traveler_info(name)
         out_table = os.path.join(out_gdb_path, name)
         create_table(out_table, None, data, templates_gdb)
+
 
 if __name__ == '__main__':
     main()
