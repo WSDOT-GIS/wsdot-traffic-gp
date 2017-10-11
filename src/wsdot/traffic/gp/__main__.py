@@ -38,7 +38,7 @@ def main():
     parser.add_argument("--code", "-c", type=str,
                         required=api_code is None, default=api_code,
                         help=p_help)
-    parser.add_argument("--schema-only", action="store_true")
+    parser.add_argument("--schema-only", action="store_true", help="Using this flag will generate the tables but skips the data download and population steps.")
     parser.add_argument("--log-level", choices=(
         "CRITICAL",
         "ERROR",
