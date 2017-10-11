@@ -100,7 +100,11 @@ class WeatherReading(object):
         self.Latitude = kwargs.get("Latitude")
         self.Longitude = kwargs.get("Longitude")
         self.Elevation = kwargs.get("Elevation")
-        self.ReadingTime = kwargs.get("ReadingTime")
+        self.ReadingTime = None
+        if "ReadingTime" in kwargs:
+            date_str = kwargs.get("ReadingTime")
+            if date_str:
+                self.ReadingTime = parse_date(date_str)
         self.AirTemperature = kwargs.get("AirTemperature")
         self.RelativeHumidity = kwargs.get("RelativeHumidty")
         self.AverageWindSpeed = kwargs.get("AverageWindSpeed")

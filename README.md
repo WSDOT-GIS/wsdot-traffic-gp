@@ -45,7 +45,13 @@ Consume the REST endpoints and return the results as a file geodatabase.
 Scripts
 -------
 
-### wsdot.traffic.gp.creategdb / createwsdottrafficgdb ###
+You can get help for any of the scripts using the `-h` argument.
+
+```console
+python -m wsdot.traffic -h
+```
+
+### wsdot.traffic.gp / wsdottrafficgp ###
 
 * Downloads data from API
 * Creates feature class and tables if not already existing
@@ -60,21 +66,21 @@ python -m wsdot.traffic.gp.creategdb
 or
 
 ```console
-createwsdottrafficgdb
+wsdottrafficgp
 ```
 
-### wsdot.traffic.dumpjson / dumpwsdottrafficjson ###
+### wsdot.traffic.dumpjson / wsdottraffic ###
 
 Downloads data from API and exports JSON files: one with the data and one with automatically detected field definitions.
 
 ```console
-python -m wsdot.traffic.dumpjson
+python -m wsdot.traffic
 ```
 
 or
 
 ```console
-dumpwsdottrafficjson
+wsdottraffic
 ```
 
 ### wsdot.traffic.gp.multipointtopoint / multipointtopoint ###

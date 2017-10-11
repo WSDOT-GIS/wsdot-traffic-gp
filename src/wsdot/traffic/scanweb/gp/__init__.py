@@ -102,7 +102,9 @@ def populate_feature_classes(workspace, accesscode=_DEFAULT_ACCESS_CODE):
     arcpy.AddMessage("Deleting existing data from tables...")
     for table in (SURFACE_TABLE_NAME, SUBSURFACE_TABLE_NAME, WEATHER_READINGS_TABLE_NAME):
         arcpy.management.DeleteRows("%s/%s" % (workspace, table))
-        arcpy.AddMessage(arcpy.GetMessages())
+        delete_msgs = arcpy.GetMessages(2)
+        if delete_msgs:
+            arcpy.AddMessage(delete_msgs)
 
     fc_fields = list(TABLE_DEFS_DICT_DICT[WEATHER_READINGS_TABLE_NAME]["fields"].keys(
     )) + ["SHAPE@XY", "SHAPE@Z"]
@@ -122,7 +124,10 @@ def populate_feature_classes(workspace, accesscode=_DEFAULT_ACCESS_CODE):
                 point = (item.Longitude, item.Latitude)
             row = list(
                 map(item.__dict__.get, fc_fields[:-2])) + [point, item.Elevation]
-            fc_cursor.insertRow(row)
+            try:
+                fc_cursor.insertRow(row)
+            except RuntimeError as ex:
+                arcpy.AddWarning("Error inserting row into %s: %s\n%s" % (WEATHER_READINGS_TABLE_NAME, row, ex))
 
             station_name = row[1]
             if item.SurfaceMeasurements:
@@ -142,7 +147,7 @@ def populate_feature_classes(workspace, accesscode=_DEFAULT_ACCESS_CODE):
         for item in surface_data:
             try:
                 surf_cursor.insertRow(item)
-            except TypeError as type_err:
+            except TypeError:
                 print(item)
                 raise
 

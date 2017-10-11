@@ -17,6 +17,7 @@ import arcpy
 
 from .. import URLS, get_traveler_info
 from . import create_table
+from ..scanweb.gp import create_tables, populate_feature_classes
 
 def main():
     """Uses this when run as a script
@@ -37,6 +38,7 @@ def main():
     parser.add_argument("--code", "-c", type=str,
                         required=api_code is None, default=api_code,
                         help=p_help)
+    parser.add_argument("--schema-only", action="store_true")
     parser.add_argument("--log-level", choices=(
         "CRITICAL",
         "ERROR",
@@ -46,17 +48,17 @@ def main():
         "NOTSET"
     ), default=logging.NOTSET)
 
-    default_names = [
-        "CVRestrictions",
-        "HighwayAlerts",
-        "HighwayCameras",
-        "MountainPassConditions",
-        "TrafficFlow",
-        "WeatherInformation",
-        "TravelTimes"
-    ]
+    # default_names = [
+    #     "CVRestrictions",
+    #     "HighwayAlerts",
+    #     "HighwayCameras",
+    #     "MountainPassConditions",
+    #     "TrafficFlow",
+    #     "WeatherInformation",
+    #     "TravelTimes"
+    # ]
 
-    p_help = 'One or more of the following values: %s' % set(URLS.keys())
+    p_help = 'One or more of the following values: %s' % set(tuple(URLS.keys()) + ("Scanweb",))
 
     parser.add_argument("names", type=str,
                         nargs=argparse.REMAINDER, help=p_help)
@@ -67,25 +69,16 @@ def main():
         log_level = getattr(logging, args.log_level.upper())
         logging.basicConfig(level=log_level)
 
-    if not args.names:
-        names = default_names
-    else:
+    names = None
+    if args.names:
         names = args.names
 
     templates_gdb = args.templates_gdb
-    create_gdb(args.gdb_path, args.code, templates_gdb, names)
+    create_gdb(args.gdb_path, args.code, templates_gdb, names, args.schema_only)
 
 
 def create_gdb(out_gdb_path="./TravelerInfo.gdb", access_code=None,
-               templates_gdb=None, names=(
-                   "CVRestrictions",
-                   "HighwayAlerts",
-                   "HighwayCameras",
-                   "MountainPassConditions",
-                   "TrafficFlow",
-                   "WeatherInformation",
-                   "TravelTimes"
-               )):
+               templates_gdb=None, names=None, skip_data=False):
     """Creates a file geodatabase of traffic API info"""
 
     # Create the file GDB if it does not already exist.
@@ -96,18 +89,30 @@ def create_gdb(out_gdb_path="./TravelerInfo.gdb", access_code=None,
     else:
         logging.debug("%s already exists. Skipping creation.", out_gdb_path)
 
+    if not names:
+        names = tuple(URLS.keys()) + ("Scanweb",)
+
     # Download each of the REST endpoints.
     for name in names:
-        print("Contacting %s..." % URLS[name])
-        # If user provided access code, use it.
-        # Otherwise don't provide to function, which will use default from
-        # environment or text file.`
-        if access_code:
-            data = get_traveler_info(name, access_code)
+        if name == "Scanweb":
+            if skip_data:
+                create_tables(out_gdb_path)
+            else:
+                populate_feature_classes(out_gdb_path)
         else:
-            data = get_traveler_info(name)
-        out_table = os.path.join(out_gdb_path, name)
-        create_table(out_table, None, data, templates_gdb)
+            print("Contacting %s..." % URLS[name])
+            # If user provided access code, use it.
+            # Otherwise don't provide to function, which will use default from
+            # environment or text file.`
+            if skip_data:
+                data = None
+            else:
+                if access_code:
+                    data = get_traveler_info(name, access_code)
+                else:
+                    data = get_traveler_info(name)
+            out_table = os.path.join(out_gdb_path, name)
+            create_table(out_table, None, data, templates_gdb)
 
 
 if __name__ == '__main__':
