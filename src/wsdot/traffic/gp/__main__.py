@@ -96,7 +96,7 @@ def create_gdb(out_gdb_path="./TravelerInfo.gdb", access_code=None,
     for name in names:
         if name == "Scanweb":
             if skip_data:
-                create_tables(out_gdb_path)
+                create_tables(out_gdb_path, template_gdb=templates_gdb)
             else:
                 populate_feature_classes(out_gdb_path)
         else:

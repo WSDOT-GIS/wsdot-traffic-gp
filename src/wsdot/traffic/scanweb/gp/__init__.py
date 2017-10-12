@@ -14,7 +14,7 @@ SURFACE_TABLE_NAME = "ScanwebSurfaceMeasurements"
 SUBSURFACE_TABLE_NAME = "ScanwebSubSurfaceMeasurements"
 
 
-def create_tables(workspace, force_overwrite=False):
+def create_tables(workspace, force_overwrite=False, template_gdb=None):
     """Creates the tables
     """
     if not arcpy.Exists(workspace):
@@ -23,8 +23,18 @@ def create_tables(workspace, force_overwrite=False):
 
     tables_created = 0
 
+    if template_gdb and not arcpy.Exists(template_gdb):
+        arcpy.AddWarning("Template geodatabase not found: %s" % template_gdb)
+        template_gdb = None
+
     for name in (WEATHER_READINGS_TABLE_NAME, SURFACE_TABLE_NAME, SUBSURFACE_TABLE_NAME):
         table_path = os.path.join(workspace, name)
+        template = None
+        if template_gdb:
+            template = os.path.join(template_gdb, name)
+            if not arcpy.Exists(template):
+                arcpy.AddWarning("Template Feature Class or table does not exist: %s" % template)
+                template = None
 
         # Skip table creation if table already exists.
         if arcpy.Exists(table_path):
@@ -33,34 +43,36 @@ def create_tables(workspace, force_overwrite=False):
             else:
                 continue
 
+
         if name == WEATHER_READINGS_TABLE_NAME:
             sr = arcpy.SpatialReference(4326)
             arcpy.management.CreateFeatureclass(
-                workspace, name, "POINT", None, "No", "Yes", sr)
+                workspace, name, "POINT", template, "No", "Yes", sr)
         else:
-            arcpy.management.CreateTable(workspace, name)
-        arcpy.AddMessage(arcpy.GetMessages())
+            arcpy.management.CreateTable(workspace, name, template)
+        arcpy.AddMessage(arcpy.GetMessages(1))
 
         fields_dict = TABLE_DEFS_DICT_DICT[name]["fields"]
 
-        # AddFields is setting default value for strings to # instead of Null.
-        # Using individual calls to AddField instead to work around this issue.
+        if not template:
+            # AddFields is setting default value for strings to # instead of Null.
+            # Using individual calls to AddField instead to work around this issue.
 
-        # if arcpy.management.AddFields:
-        #     field_description = []
-        #     for field_name, field_type in fields_dict.items():
-        #         field_description.append(
-        #             [field_name, field_type, field_name, None, None])
-        #     arcpy.management.AddFields(table_path, field_description)
-        #     arcpy.AddMessage(arcpy.GetMessages())
+            # if arcpy.management.AddFields:
+            #     field_description = []
+            #     for field_name, field_type in fields_dict.items():
+            #         field_description.append(
+            #             [field_name, field_type, field_name, None, None])
+            #     arcpy.management.AddFields(table_path, field_description)
+            #     arcpy.AddMessage(arcpy.GetMessages())
 
-        # else:
-        #     for field_name, field_type in fields_dict.items():
-        #         arcpy.management.AddField(table_path, field_name, field_type)
-        #         arcpy.AddMessage(arcpy.GetMessages())
-        for field_name, field_type in fields_dict.items():
-            arcpy.management.AddField(table_path, field_name, field_type)
-            arcpy.AddMessage(arcpy.GetMessages())
+            # else:
+            #     for field_name, field_type in fields_dict.items():
+            #         arcpy.management.AddField(table_path, field_name, field_type)
+            #         arcpy.AddMessage(arcpy.GetMessages())
+            for field_name, field_type in fields_dict.items():
+                arcpy.management.AddField(table_path, field_name, field_type)
+                arcpy.AddMessage(arcpy.GetMessages(1))
         tables_created += 1
 
     if not tables_created:

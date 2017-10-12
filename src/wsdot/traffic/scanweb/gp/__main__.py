@@ -2,12 +2,12 @@ from __future__ import print_function, absolute_import, unicode_literals
 import argparse
 from os.path import split, abspath
 from . import populate_feature_classes
-from ... import _DEFAULT_ACCESS_CODE
 import arcpy
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("gdb")
+    parser.add_argument("gdb", help="The output file geodatabase.")
+    parser.add_argument("template_gdb", help="File geodatabase containing templates for feature class and table creation.", nargs="?")
     args = parser.parse_args()
     gdb = args.gdb
     gdb = abspath(gdb)
