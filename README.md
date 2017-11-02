@@ -29,13 +29,13 @@ Modules
 -------
 See the modules' [docstrings] for more details on how to use the scripts.
 
-### wsdot.traffic ###
+### wsdottraffic ###
 This module provides the ability to query the REST endpoints and return the results as a dictionary.
 
 * Note that this script has no ArcGIS dependencies and can be run without any ArcGIS software installed.
 * Should run in either v2.7+ or v3.5.2+ of Python.
 
-### wsdot.traffic.gp ###
+### wsdottraffic.gp ###
 Consume the REST endpoints and return the results as a file geodatabase.
 
 * Requires ArcPy
@@ -48,10 +48,10 @@ Scripts
 You can get help for any of the scripts using the `-h` argument.
 
 ```console
-python -m wsdot.traffic -h
+python -m wsdottraffic -h
 ```
 
-### wsdot.traffic.gp / wsdottrafficgp ###
+### wsdottraffic.gp / wsdottrafficgp ###
 
 * Downloads data from API
 * Creates feature class and tables if not already existing
@@ -60,7 +60,7 @@ python -m wsdot.traffic -h
 * Zips the file geodatabase (which is a folder w/ `.gdb` extension).
 
 ```console
-python -m wsdot.traffic.gp.creategdb
+python -m wsdottraffic.gp.creategdb
 ```
 
 or
@@ -69,12 +69,12 @@ or
 wsdottrafficgp
 ```
 
-### wsdot.traffic.dumpjson / wsdottraffic ###
+### wsdottraffic.dumpjson / wsdottraffic ###
 
 Downloads data from API and exports JSON files: one with the data and one with automatically detected field definitions.
 
 ```console
-python -m wsdot.traffic
+python -m wsdottraffic
 ```
 
 or
@@ -83,12 +83,12 @@ or
 wsdottraffic
 ```
 
-### wsdot.traffic.gp.multipointtopoint / multipointtopoint ###
+### wsdottraffic.gp.multipointtopoint / multipointtopoint ###
 
 Calls the [Multipart to Singlepart] tool for each multipoint feature class in a geodatabase. Added feature classes will have the same name as its source, but with the added suffix *_singlepart*.
 
 ```console
-python -m wsdot.traffic.gp.multipointtopoint YourGDBNameHere.gdb
+python -m wsdottraffic.gp.multipointtopoint YourGDBNameHere.gdb
 ```
 
 or
@@ -103,7 +103,7 @@ Notes for developers
 The example below shows how to run one of the scripts from within the project directory
 
 ```console
-python -m src.wsdot.traffic.gp.creategdb
+python -m src.wsdottraffic.gp.creategdb
 ```
 
 ### Unit tests (`test_*.py`) ###

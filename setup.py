@@ -2,7 +2,7 @@
 """
 from codecs import open as codec_open
 from os import path
-from setuptools import setup  # , find_packages
+from setuptools import setup, find_packages
 
 HERE = path.abspath(path.dirname(__file__))
 
@@ -10,8 +10,8 @@ with codec_open(path.join(HERE, "README.md"), encoding='utf-8') as f:
     LONG_DESC = f.read()
 
 setup(
-    name="wsdot.traffic",
-    version="2.0.0",
+    name="wsdottraffic",
+    version="3.0.0-beta.1",
     description="Retrieves data from WSDOT Traffic API",
     long_description=LONG_DESC,
     url="https://github.com/WSDOT-GIS/wsdot-traffic-gp",
@@ -36,21 +36,16 @@ setup(
     package_dir={
         'wsdot': 'src/wsdot'
     },
-    packages=[
-        'wsdot.traffic',
-        'wsdot.traffic.gp',
-        'wsdot.traffic.scanweb',
-        'wsdot.traffic.scanweb.gp'
-    ],  # find_packages(),
+    packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'wsdottrafficgp = wsdot.traffic.gp.__main__:main',
-            'wsdottraffic = wsdot.traffic.__main__:main',
-            'multipointtopoint = wsdot.traffic.gp.multipointtopoint:main',
-            'zipgdb = wsdot.traffic.gp.zipgdb:main'
+            'wsdottrafficgp = wsdottraffic.gp.__main__:main',
+            'wsdottraffic = wsdottraffic.__main__:main',
+            'multipointtopoint = wsdottraffic.gp.multipointtopoint:main',
+            'zipgdb = wsdottraffic.gp.zipgdb:main'
         ]
     },
     package_data={
-        'wsdot.traffic.gp': ["*.json"]
+        'wsdottraffic.gp': ["*.json"]
     }
 )

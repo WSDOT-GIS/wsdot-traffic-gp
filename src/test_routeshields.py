@@ -5,7 +5,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import unittest
-from wsdot.traffic.routeshields import id_to_label, label_to_3_digit_id
+from wsdottraffic.routeshields import id_to_label, label_to_3_digit_id
 
 
 class RouteShieldsTest(unittest.TestCase):
