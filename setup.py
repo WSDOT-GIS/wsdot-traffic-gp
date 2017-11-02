@@ -34,9 +34,14 @@ setup(
         "Topic :: Scientific/Engineering :: GIS"
     ],
     package_dir={
-        'wsdot': 'src/wsdot'
+        'wsdottraffic': 'src/wsdottraffic'
     },
-    packages=find_packages(),
+    packages=[
+        'wsdottraffic',
+        'wsdottraffic.gp',
+        'wsdottraffic.scanweb',
+        'wsdottraffic.scanweb.gp'
+    ],  # find_packages(),
     entry_points={
         'console_scripts': [
             'wsdottrafficgp = wsdottraffic.gp.__main__:main',
