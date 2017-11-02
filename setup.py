@@ -33,15 +33,7 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Topic :: Scientific/Engineering :: GIS"
     ],
-    package_dir={
-        'wsdottraffic': 'src/wsdottraffic'
-    },
-    packages=[
-        'wsdottraffic',
-        'wsdottraffic.gp',
-        'wsdottraffic.scanweb',
-        'wsdottraffic.scanweb.gp'
-    ],  # find_packages(),
+    packages=find_packages(),
     entry_points={
         'console_scripts': [
             'wsdottrafficgp = wsdottraffic.gp.__main__:main',

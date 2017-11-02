@@ -2,5 +2,5 @@ language: python
 python:
     - "3.5"
     - "2.7"
-script: python src/test_travelerinfo.py
+script: python test_travelerinfo.py
 sudo: false
