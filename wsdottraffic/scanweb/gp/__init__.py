@@ -72,7 +72,7 @@ def create_tables(workspace, force_overwrite=False, template_gdb=None):
             #         arcpy.AddMessage(arcpy.GetMessages())
             for field_name, field_type in fields_dict.items():
                 arcpy.management.AddField(table_path, field_name, field_type)
-                arcpy.AddMessage(arcpy.GetMessages(1))
+                # arcpy.AddMessage(arcpy.GetMessages(1))
         tables_created += 1
 
     if not tables_created:
