@@ -1,7 +1,7 @@
 """Test which require arcpy to be installed.
 """
 
-from os.path import join, exists
+from os.path import join
 import json
 import re
 import unittest
@@ -15,7 +15,13 @@ else:
 
 
 class TestGeoprocessingFunctions(unittest.TestCase):
+    """Test case for testing functions that depend on arcpy.
+    These will be skipped if arcpy is not available on the
+    current system.
+    """
     def skip_if_no_arcpy(self):
+        """Skips the current test if arcpy is not available.
+        """
         if not arcpy:
             self.skipTest("arcpy is not installed.")
 
@@ -23,7 +29,8 @@ class TestGeoprocessingFunctions(unittest.TestCase):
         self.skip_if_no_arcpy()
 
         # Create the file geodatabase
-        gdb_name = arcpy.CreateScratchName("Traffic", ".gdb", "File Geodatabase", ".")
+        gdb_name = arcpy.CreateScratchName(
+            "Traffic", ".gdb", "File Geodatabase", ".")
         try:
             __main__.create_gdb(gdb_name, templates_gdb="Templates.gdb")
 
@@ -45,7 +52,8 @@ class TestGeoprocessingFunctions(unittest.TestCase):
 
                 # Fail if the dictionary doesn't contain "fields" key.
                 if not "fields" in table_prop_dict:
-                    raise KeyError("Expected 'fields' key in %s" % table_prop_dict)
+                    raise KeyError("Expected 'fields' key in %s" %
+                                   table_prop_dict)
                 for name, data in table_prop_dict["fields"].items():
                     if not isinstance(data, str) and "field_name" in data:
                         out_name = data["field_name"]
@@ -61,7 +69,7 @@ class TestGeoprocessingFunctions(unittest.TestCase):
 
                 # Get list of field names in the current GIS table.
                 fields = list(map(lambda field: field.name,
-                                arcpy.ListFields(table_path)))
+                                  arcpy.ListFields(table_path)))
 
                 for expected_name in get_field_names_from_schema(schema_table_props):
                     self.assertIn(expected_name, fields, "%s should include a field named %s." % (
