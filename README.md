@@ -13,13 +13,13 @@ Setup
 To install this package onto your computer using pip, use the following command. For more information on installing packages, see the [Installing Packages] tutorial from the *PyPA Python Packaging User Guide*.
 
 ```console
-pip install git+https://github.com/WSDOT-GIS/wsdot-traffic-gp.git
+pip install wsdottraffic
 ```
 
 If you are running this command from PowerShell, you will need to have administrator privileges.
 
 ```PowerShell
-Start-Process pip "install git+https://github.com/WSDOT-GIS/wsdot-traffic-gp.git" -Verb RunAs
+Start-Process pip "install wsdottraffic" -Verb RunAs
 ```
 
 ### Default access code ###
