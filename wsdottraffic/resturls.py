@@ -4,7 +4,7 @@ Provides a list of URLs for REST endpoints.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-API_BASE = "http://www.wsdot.wa.gov/Traffic/api"
+API_BASE = "https://www.wsdot.wa.gov/Traffic/api"
 
 URLS = {
     "BorderCrossings": "%s/BorderCrossings/BorderCrossingsREST.svc/GetBorderCrossingsAsJson" % API_BASE,
