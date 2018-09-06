@@ -78,7 +78,7 @@ def parse_traveler_info_object(dct):
             for roadway_location_key in val:
                 new_key = key + roadway_location_key
                 new_key = _simplify_field_name(new_key)
-                if new_key and val.get(roadway_location_key) is None:
+                if not new_key or (new_key and val.get(roadway_location_key) is None):
                     continue
                 if (road_name_field.match(new_key) and
                         val.get(roadway_location_key) and
@@ -89,7 +89,7 @@ def parse_traveler_info_object(dct):
                     output[new_key] = val[roadway_location_key]
         else:
             simplified_key = _simplify_field_name(key)
-            if simplified_key and val is None:
+            if not simplified_key or (simplified_key and val is None):
                 continue
             if simplified_key == "LocationID":
                 output[simplified_key] = "{%s}" % val
@@ -101,7 +101,6 @@ def parse_traveler_info_object(dct):
             else:
                 output[simplified_key] = val
     return output
-
 
 def to_geo_json(dct):
     """This method is used by the json.load method to customize how
@@ -137,6 +136,8 @@ def to_geo_json(dct):
             ]
         }
         nonproperty_fields = multi_point_geo_fields
+    else:
+        outdict["geometry"] = None
     for key, value in dct.items():
         if key in nonproperty_fields:
             continue

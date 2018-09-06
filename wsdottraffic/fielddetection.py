@@ -84,8 +84,21 @@ def _get_field_type(value):
 
 class FieldInfo(object):
     """Represents parameters for creating fields.
+
+    Attributes:
+        field_name: name of the field
+        field_length: length of field. Only applicable to certain data types.
+        field_type: data type of field
+        field_is_nullable: indicates if the field is nullable.
     """
     def __init__(self, name, value, template=None):
+        """Creates a new FieldInfo instance.
+
+        Args:
+            name: field name
+            value: value used to determine the data type of the field
+            template: Another FieldInfo object to be used as a template
+        """
         self.field_name = None
         self.field_length = None
         self.field_type = None
@@ -137,6 +150,11 @@ class FieldInfo(object):
     def from_features(features):
         """Extracts a list of FieldInfos from a list of dicts representing
         GDB features
+
+        Args:
+            features: a list of dicts that define features
+        Returns:
+            A dict of field infos keyed by field_name.
         """
         master = {}
         for feature in features:
@@ -151,7 +169,7 @@ class FieldInfo(object):
 
 
 def _iter_field_infos(feature_dict):
-    """Iterates over dict key/value paris and yields FieldInfo objects
+    """Iterates over dict key/value pairs and yields FieldInfo objects
     """
     for key, val in feature_dict.items():
         next_fi = FieldInfo(key, val)
