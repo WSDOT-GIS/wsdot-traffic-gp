@@ -7,16 +7,5 @@
         "**/.svn": true,
         "**/.hg": true,
         "**/.DS_Store": true
-    },
-    "python.linting.pylintEnabled": true,
-    "python.linting.pep8Enabled": false,
-    "python.unitTest.unittestArgs": [
-        "-v",
-        "-s",
-        ".",
-        "-p",
-        "test*.py"
-    ],
-    "python.unitTest.unittestEnabled": true,
-    "python.pythonPath": "C:/Program Files/ArcGIS/Pro/bin/Python/envs/arcgispro-py3/python"
+    }
 }

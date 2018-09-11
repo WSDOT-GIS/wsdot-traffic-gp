@@ -41,7 +41,7 @@ def get_traveler_info_json(dataname, accesscode=_DEFAULT_ACCESS_CODE):
     @param accesscode: Access code. (optional if default is provided.)
     @type accesscode: str
     @return: The JSON output from the rest endpoint
-    @rtype: list
+    @rtype: bytes
     """
     if not accesscode:
         if _DEFAULT_ACCESS_CODE:
