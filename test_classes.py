@@ -1,10 +1,53 @@
+"""Tests the dataclasses.
+"""
+
 import unittest
 import os
 import json
 import re
 from wsdottraffic.classes import parse, TrafficJSONEncoder
+from wsdottraffic.dicttools import flatten_dict
+
 
 class classtest(unittest.TestCase):
+
+    def test_flatten_dict(self):
+        data = {
+            "FlowDataID": 2482,
+            "FlowReadingValue": 1,
+            "FlowStationLocation": {
+                "Description": "Homeacres Rd",
+                "Direction": "EB",
+                "Latitude": 47.978415632,
+                "Longitude": -122.174701738,
+                "MilePost": 0.68,
+                "RoadName": "002"
+            },
+            "Region": "Northwest",
+            "StationName": "002es00068",
+            "Time": "/Date(1536618682000-0700)/"
+        }
+
+        flat_dict = dict(flatten_dict(data))
+        expected_output = {
+            "FlowDataID": 2482,
+            "FlowReadingValue": 1,
+            "FlowStationLocationDescription": "Homeacres Rd",
+            "FlowStationLocationDirection": "EB",
+            "FlowStationLocationLatitude": 47.978415632,
+            "FlowStationLocationLongitude": -122.174701738,
+            "FlowStationLocationMilePost": 0.68,
+            "FlowStationLocationRoadName": "002",
+            "Region": "Northwest",
+            "StationName": "002es00068",
+            "Time": "/Date(1536618682000-0700)/"
+        }
+
+        self.assertDictEqual(flat_dict, expected_output)
+
+
+
+
 
     def test_deserialize(self):
 
@@ -33,6 +76,7 @@ class classtest(unittest.TestCase):
             with open(outfn, "w", encoding='utf_8') as f:
                 # f.write("%s" % l)
                 json.dump(l, f, cls=TrafficJSONEncoder)
+
 
 if __name__ == '__main__':
     unittest.main()
