@@ -5,7 +5,7 @@ from __future__ import unicode_literals, print_function, absolute_import, divisi
 import json
 import datetime
 from sys import stderr
-from dateutil.parser import parse as parse_date
+import dateutil.parser
 import requests
 from ..resturls import URLS
 from .. import _DEFAULT_ACCESS_CODE
@@ -13,12 +13,13 @@ from .. import _DEFAULT_ACCESS_CODE
 # pylint: disable=invalid-name,too-few-public-methods
 
 class SurfaceMeasurements(object):
-    """
-    Surface Measurement
-    byte 	SensorId [get, set]
-    decimal 	SurfaceTemperature [get, set]
-    decimal 	RoadFreezingTemperature [get, set]
-    int 	RoadSurfaceCondition [get, set]
+    """Surface Measurement
+
+    Attributes:
+        SensorId: byte
+        SurfaceTemperature: decimal
+        RoadFreezingTemperature: decimal
+        RoadSurfaceCondition: int
     """
     def __init__(self, **kwargs):
         self.SensorId = kwargs.get("SensorId")
@@ -28,10 +29,11 @@ class SurfaceMeasurements(object):
 
 
 class SubSurfaceMeasurements(object):
-    """
-    Sub-Surface Measurement
-    byte 	SensorId [get, set]
-    decimal 	SubSurfaceTemperature [get, set]
+    """Sub-Surface Measurement
+
+    Attributes:
+        SensorId: byte
+        SubSurfaceTemperature: decimal
     """
     def __init__(self, **kwargs):
         self.SensorId = kwargs.get("SensorId")
@@ -39,61 +41,62 @@ class SubSurfaceMeasurements(object):
 
 
 class WeatherReading(object):
-    """
-    Scanweb Weather Reading
-    string 	StationId [get, set]
-    string 	StationName [get, set]
-    decimal 	Latitude [get, set]
-    decimal 	Longitude [get, set]
-    int 	Elevation [get, set]
-    DateTime 	ReadingTime [get, set]
-    decimal 	AirTemperature [get, set]
-    byte 	RelativeHumidty [get, set]
-    byte 	AverageWindSpeed [get, set]
-    short 	AverageWindDirection [get, set]
-    byte 	WindGust [get, set]
-    short 	Visibility [get, set]
-    byte 	PrecipitationIntensity [get, set]
-    byte 	PrecipitationType [get, set]
-    decimal 	PrecipitationPast1Hour [get, set]
-    decimal 	PrecipitationPast3Hours [get, set]
-    decimal 	PrecipitationPast6Hours [get, set]
-    decimal 	PrecipitationPast12Hours [get, set]
-    decimal 	PrecipitationPast24Hours [get, set]
-    decimal 	PrecipitationAccumulation [get, set]
-    int 	BarometricPressure [get, set]
-    int 	SnowDepth [get, set]
-    List< ScanwebSurfaceMeasurements > 	SurfaceMeasurements [get, set]
-    List< ScanwebSubSurfaceMeasurements > 	SubSurfaceMeasurements [get, set]
+    """Scanweb Weather Reading
+
+    Attributes:
+        StationId: string
+        StationName: string
+        Latitude: decimal
+        Longitude: decimal
+        Elevation: int
+        ReadingTime: DateTime
+        AirTemperature: decimal
+        RelativeHumidty: byte
+        AverageWindSpeed: byte
+        AverageWindDirection: short
+        WindGust: byte
+        Visibility: short
+        PrecipitationIntensity: byte
+        PrecipitationType: byte
+        PrecipitationPast1Hour: decimal
+        PrecipitationPast3Hours: decimal
+        PrecipitationPast6Hours: decimal
+        PrecipitationPast12Hours: decimal
+        PrecipitationPast24Hours: decimal
+        PrecipitationAccumulation: decimal
+        BarometricPressure: int
+        SnowDepth: int
+        SurfaceMeasurements: Sequence[ScanwebSurfaceMeasurements]
+        SubSurfaceMeasurements: Sequence[ScanwebSubSurfaceMeasurements]
     """
 
     def __init__(self, **kwargs):
         """
         Scanweb Weather Reading
-        string 	StationId [get, set]
-        string 	StationName [get, set]
-        decimal 	Latitude [get, set]
-        decimal 	Longitude [get, set]
-        int 	Elevation [get, set]
-        DateTime 	ReadingTime [get, set]
-        decimal 	AirTemperature [get, set]
-        byte 	RelativeHumidty [get, set]
-        byte 	AverageWindSpeed [get, set]
-        short 	AverageWindDirection [get, set]
-        byte 	WindGust [get, set]
-        short 	Visibility [get, set]
-        byte 	PrecipitationIntensity [get, set]
-        byte 	PrecipitationType [get, set]
-        decimal 	PrecipitationPast1Hour [get, set]
-        decimal 	PrecipitationPast3Hours [get, set]
-        decimal 	PrecipitationPast6Hours [get, set]
-        decimal 	PrecipitationPast12Hours [get, set]
-        decimal 	PrecipitationPast24Hours [get, set]
-        decimal 	PrecipitationAccumulation [get, set]
-        int 	BarometricPressure [get, set]
-        int 	SnowDepth [get, set]
-        List< ScanwebSurfaceMeasurements > 	SurfaceMeasurements [get, set]
-        List< ScanwebSubSurfaceMeasurements > 	SubSurfaceMeasurements [get, set]
+        StationId: string
+        StationName: string
+        Latitude: decimal
+        Longitude: decimal
+        Elevation: int
+        ReadingTime: DateTime
+        AirTemperature: decimal
+        RelativeHumidty: byte
+        AverageWindSpeed: byte
+        AverageWindDirection: short
+        WindGust: byte
+        Visibility: short
+        PrecipitationIntensity: byte
+        PrecipitationType: byte
+        PrecipitationPast1Hour: decimal
+        PrecipitationPast3Hours: decimal
+        PrecipitationPast6Hours: decimal
+        PrecipitationPast12Hours: decimal
+        PrecipitationPast24Hours: decimal
+        PrecipitationAccumulation: decimal
+        BarometricPressure: int
+        SnowDepth: int
+        SurfaceMeasurements: Sequence[ScanwebSurfaceMeasurements]
+        SubSurfaceMeasurements: Sequence[ScanwebSubSurfaceMeasurements]
         """
         self.StationId = kwargs.get("StationId")
         self.StationName = kwargs.get("StationName")
@@ -104,7 +107,7 @@ class WeatherReading(object):
         if "ReadingTime" in kwargs:
             date_str = kwargs.get("ReadingTime")
             if date_str:
-                self.ReadingTime = parse_date(date_str)
+                self.ReadingTime = dateutil.parser.parse(date_str)
         self.AirTemperature = kwargs.get("AirTemperature")
         self.RelativeHumidity = kwargs.get("RelativeHumidty")
         self.AverageWindSpeed = kwargs.get("AverageWindSpeed")
