@@ -12,7 +12,7 @@ from .. import _DEFAULT_ACCESS_CODE
 
 # pylint: disable=invalid-name,too-few-public-methods
 
-class SurfaceMeasurements(object):
+class SurfaceMeasurements():
     """Surface Measurement
 
     Attributes:
@@ -28,7 +28,7 @@ class SurfaceMeasurements(object):
         self.RoadSurfaceCondition = kwargs.get("RoadSurfaceCondition")
 
 
-class SubSurfaceMeasurements(object):
+class SubSurfaceMeasurements():
     """Sub-Surface Measurement
 
     Attributes:
@@ -40,7 +40,7 @@ class SubSurfaceMeasurements(object):
         self.SubSurfaceTemperature = kwargs.get("SubSurfaceTemperature")
 
 
-class WeatherReading(object):
+class WeatherReading():
     """Scanweb Weather Reading
 
     Attributes:
@@ -71,32 +71,33 @@ class WeatherReading(object):
     """
 
     def __init__(self, **kwargs):
-        """
-        Scanweb Weather Reading
-        StationId: string
-        StationName: string
-        Latitude: decimal
-        Longitude: decimal
-        Elevation: int
-        ReadingTime: DateTime
-        AirTemperature: decimal
-        RelativeHumidty: byte
-        AverageWindSpeed: byte
-        AverageWindDirection: short
-        WindGust: byte
-        Visibility: short
-        PrecipitationIntensity: byte
-        PrecipitationType: byte
-        PrecipitationPast1Hour: decimal
-        PrecipitationPast3Hours: decimal
-        PrecipitationPast6Hours: decimal
-        PrecipitationPast12Hours: decimal
-        PrecipitationPast24Hours: decimal
-        PrecipitationAccumulation: decimal
-        BarometricPressure: int
-        SnowDepth: int
-        SurfaceMeasurements: Sequence[ScanwebSurfaceMeasurements]
-        SubSurfaceMeasurements: Sequence[ScanwebSubSurfaceMeasurements]
+        """Scanweb Weather Reading
+
+        Args:
+            StationId: string
+            StationName: string
+            Latitude: decimal
+            Longitude: decimal
+            Elevation: int
+            ReadingTime: DateTime
+            AirTemperature: decimal
+            RelativeHumidty: byte
+            AverageWindSpeed: byte
+            AverageWindDirection: short
+            WindGust: byte
+            Visibility: short
+            PrecipitationIntensity: byte
+            PrecipitationType: byte
+            PrecipitationPast1Hour: decimal
+            PrecipitationPast3Hours: decimal
+            PrecipitationPast6Hours: decimal
+            PrecipitationPast12Hours: decimal
+            PrecipitationPast24Hours: decimal
+            PrecipitationAccumulation: decimal
+            BarometricPressure: int
+            SnowDepth: int
+            SurfaceMeasurements: Sequence[ScanwebSurfaceMeasurements]
+            SubSurfaceMeasurements: Sequence[ScanwebSubSurfaceMeasurements]
         """
         self.StationId = kwargs.get("StationId")
         self.StationName = kwargs.get("StationName")

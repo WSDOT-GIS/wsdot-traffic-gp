@@ -35,7 +35,7 @@ class CommercialVehicleRestrictionType(enum.IntEnum):
 
 
 @dataclass
-class RoadwayLocation(object):
+class RoadwayLocation():
     """Describes a point along a WSDOT route.
     """
     Description: str = None
@@ -69,7 +69,7 @@ class RoadwayLocation(object):
 
 
 @dataclass
-class BorderCrossingData(object):
+class BorderCrossingData():
     """Describes a WA/Canada border crossing and wait time.
     """
     Time: datetime.datetime = None
@@ -96,7 +96,7 @@ class BorderCrossingData(object):
 
 
 @dataclass
-class BridgeDataGIS(object):
+class BridgeDataGIS():
     """Bridge Data
     """
     LocationID: uuid.UUID
@@ -142,7 +142,7 @@ class BridgeDataGIS(object):
 
 
 @dataclass
-class CVRestrictionData(object):
+class CVRestrictionData():
     """Commercial Vehicle Restriction data.
     """
     StateRouteID: str = None
@@ -220,7 +220,7 @@ def get_multipoint_feature(dct: dict, *xy_props: Sequence[Sequence[str]]):
 
 
 @dataclass
-class Alert(object):
+class Alert():
     """Highway Alert
     """
     AlertID: int = None
@@ -267,7 +267,7 @@ class Alert(object):
 
 
 @dataclass
-class Camera(object):
+class Camera():
     """Highway Camera
     """
     CameraID: int = None
@@ -331,7 +331,7 @@ class Camera(object):
 
 
 @dataclass
-class TravelRestriction(object):
+class TravelRestriction():
     """Describes a travel restriction
     """
     TravelDirection: str = None
@@ -340,7 +340,7 @@ class TravelRestriction(object):
 
 
 @dataclass
-class PassCondition(object):
+class PassCondition():
     """Mountain pass condition
     """
     MountainPassId: int = None
@@ -407,7 +407,7 @@ class FlowStationReading(enum.IntEnum):
 
 
 @dataclass
-class FlowData(object):
+class FlowData():
     """Flow data
     """
     FlowDataID: int = None
@@ -445,7 +445,7 @@ class FlowData(object):
 
 
 @dataclass
-class TravelTimeRoute(object):
+class TravelTimeRoute():
     """Travel time route
     """
     TravelTimeID: int = None
@@ -468,7 +468,7 @@ class TravelTimeRoute(object):
 
 
 @dataclass
-class WeatherInfo(object):
+class WeatherInfo():
     """Weather info
     """
     StationID: int = None
@@ -518,7 +518,7 @@ class WeatherInfo(object):
 
 
 @dataclass
-class TollRate(object):
+class TollRate():
     """Toll rate
     """
     SignName: str = None

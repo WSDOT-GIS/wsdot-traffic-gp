@@ -82,7 +82,7 @@ def _get_field_type(value):
     return field_type
 
 
-class FieldInfo(object):
+class FieldInfo():
     """Represents parameters for creating fields.
 
     Attributes:
