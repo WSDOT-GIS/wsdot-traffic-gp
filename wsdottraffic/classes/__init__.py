@@ -7,29 +7,62 @@ from dataclasses import dataclass
 import enum
 import uuid
 import json
-from typing import Sequence
+from typing import Sequence, Tuple
 from ..parseutils import parse_wcf_date
 from ..dicttools import flatten_dict
 
 
 def create_point_geo_interface(x: float, y: float) -> dict:
-    """Provided an X and Y coordinate, returns a __geo_interface__
-    Point dict.
+    """Provided an X and Y coordinate, returns a __geo_interface__ Point dict.
     """
     if x and y:
         coords = tuple(x, y)
     else:
         coords = None
-    output = {
-        "type": "Point",
+    if coords:
+        return {
+            "type": "Point",
+            "coordinates": coords
+        }
+    return None
+
+
+def get_multipoint_feature(dct: dict, *xy_props: Tuple[str, str]):
+    """Converts a flattened dictionary into a multipoint feature
+    geometry interface (__geo_interface__).
+
+    Args:
+        dct: dictionary of properties
+        xy_props: tuple containging the names of the properties
+            that define longitude and latitude, respectively.
+
+    Returns:
+        A dict defining a __geo_interface__
+    """
+    coords = []
+    for x_key, y_key in xy_props:
+        x, y = map(dct.get, (x_key, y_key), (None,)*2)
+        if x is not None and y is not None:
+            coords.append(tuple(x, y))
+    coords = tuple(coords)
+    geo = {
+        "type": "MultiPoint",
         "coordinates": coords
     }
-    return output
+    return {
+        "type": "Feature",
+        "properties": dct,
+        "geometry": geo
+    }
 
 
 @enum.unique
 class CommercialVehicleRestrictionType(enum.IntEnum):
     """Commercial Vehicle Type
+
+    Values:
+        BridgeRestriction: 0
+        RoadRestriction: 1
     """
     BridgeRestriction = 0
     RoadRestriction = 1
@@ -38,6 +71,16 @@ class CommercialVehicleRestrictionType(enum.IntEnum):
 @dataclass
 class RoadwayLocation():
     """Describes a point along a WSDOT route.
+
+    See https://www.wsdot.wa.gov/Traffic/api/Documentation/class_roadway_location.html
+
+    Attributes:
+        Description: A description of the location. This could be a cross street or a nearby landmark.
+        Direction: The side of the road the location is on (Northbound, Southbound). This does not necessarily correspond to an actual compass direction.
+        Latitude: Latitude of the location.
+        Longitude: Longitude of the location.
+        MilePost: The milepost of the location.
+        RoadName: The name of the road.
     """
     Description: str = None
     RoadName: str = None
@@ -74,6 +117,8 @@ class RoadwayLocation():
 @dataclass
 class BorderCrossingData():
     """Describes a WA/Canada border crossing and wait time.
+
+    See https://www.wsdot.wa.gov/Traffic/api/Documentation/class_border_crossing_data.html
     """
     Time: datetime.datetime = None
     CrossingName: str = None
@@ -103,6 +148,8 @@ class BorderCrossingData():
 @dataclass
 class BridgeDataGIS():
     """Bridge Data
+
+    See https://www.wsdot.wa.gov/Traffic/api/Documentation/class_bridge_data_g_i_s.html
     """
     LocationID: uuid.UUID
     StructureID: str = None
@@ -148,6 +195,8 @@ class BridgeDataGIS():
 @dataclass
 class CVRestrictionData():
     """Commercial Vehicle Restriction data.
+
+    See https://www.wsdot.wa.gov/Traffic/api/Documentation/class_c_v_restriction_data.html
     """
     StateRouteID: str = None
     State: str = None
@@ -202,30 +251,11 @@ class CVRestrictionData():
         }
 
 
-def get_multipoint_feature(dct: dict, *xy_props: Sequence[Sequence[str]]):
-    """Converts a flattened dictionary into a multipoint feature
-    geometry interface (__geo_interface__).
-    """
-    coords = []
-    for x_key, y_key in xy_props:
-        x, y = map(dct.get, (x_key, y_key), (None,)*2)
-        if x is not None and y is not None:
-            coords.append(tuple(x, y))
-    coords = tuple(coords)
-    geo = {
-        "type": "MultiPoint",
-        "coordinates": coords
-    }
-    return {
-        "type": "Feature",
-        "properties": dct,
-        "geometry": geo
-    }
-
-
 @dataclass
 class Alert():
     """Highway Alert
+
+    See https://www.wsdot.wa.gov/Traffic/api/Documentation/class_alert.html
     """
     AlertID: int = None
 
@@ -273,6 +303,24 @@ class Alert():
 @dataclass
 class Camera():
     """Highway Camera
+
+    See https://www.wsdot.wa.gov/Traffic/api/Documentation/class_camera.html
+
+    Attributes:
+        CameraID: Unique identifier for the camera
+        CameraLocation: Structure identifying where the camera is located
+        CameraOwner: Owner of camera when not WSDOT
+        Description: Short description for the camera
+        DisplayLatitude: Latitude of where to display the camera on a map
+        DisplayLongitude: Longitude of where to display the camera on a map
+        ImageHeight: Pixel height of the image
+        ImageURL: Stored location of the camera image
+        ImageWidth: Pixel width of the image
+        IsActive: Indicator if the camera is still actively being updated
+        OwnerURL: Website for camera owner when not WSDOT
+        Region: WSDOT region which owns the camera
+        SortOrder: When more than one camera is located in the same area this is order of display
+        Title: Title for the camera
     """
     CameraID: int = None
 
@@ -309,35 +357,32 @@ class Camera():
 
     @property
     def __geo_interface__(self):
-        props = copy.deepcopy(self.__dict__)
-        x: float = None
-        y: float = None
-        road_loc: RoadwayLocation = props.pop("RoadwayLocation")
-        if self.DisplayLatitude and self.DisplayLongitude:
-            x = props.pop("DisplayLongitude")
-            y = props.pop("DisplayLatitude")
-        elif self.CameraLocation.Longitude and self.CameraLocation.Latitude:
-            x = self.CameraLocation.Longitude
-            y = self.CameraLocation.Latitude
-        output = {
+        props = dict(flatten_dict(self.__dict__))
+
+        dx, dy, x, y = map(props.pop, (
+            "DisplayLongitude",
+            "DisplayLatitude",
+            "CameraLocationLongitude",
+            "CameraLocationLatitude",
+        ), (None,)*4)
+
+        if not x and dx:
+            x = dx
+        if not y and dy:
+            y = dy
+
+        return {
             "type": "Feature",
             "properties": props,
-            "geometry": {
-                "type": "Point",
-                "coordinates": tuple(x, y)
-            }
+            "geometry": create_point_geo_interface(x, y)
         }
-
-        # Add the roadway location properties to the output properties dict
-        for key, val in road_loc.__dict__.items():
-            props[key] = val
-
-        return output
 
 
 @dataclass
 class TravelRestriction():
     """Describes a travel restriction
+
+    See https://www.wsdot.wa.gov/Traffic/api/Documentation/class_travel_restriction.html
     """
     TravelDirection: str = None
 
@@ -347,6 +392,8 @@ class TravelRestriction():
 @dataclass
 class PassCondition():
     """Mountain pass condition
+
+    See https://www.wsdot.wa.gov/Traffic/api/Documentation/class_pass_condition.html
     """
     MountainPassId: int = None
 
@@ -392,10 +439,7 @@ class PassCondition():
         x = props.pop("Longitude", None)
         y = props.pop("Latitude", None)
         if (x and y):
-            output["geometry"] = {
-                "type": "Point",
-                "coordinates": tuple(x, y)
-            }
+            output["geometry"] = create_point_geo_interface(x, y)
         else:
             output["geometry"] = None
         return output
@@ -404,6 +448,14 @@ class PassCondition():
 @enum.unique
 class FlowStationReading(enum.IntEnum):
     """Flow station reading
+
+    Values:
+        Unknown: 0
+        WideOpen: 1
+        Moderate: 2
+        Heavy: 3
+        StopAndGo: 4
+        NoData: 5
     """
     Unknown = 0
     WideOpen = 1
@@ -416,6 +468,8 @@ class FlowStationReading(enum.IntEnum):
 @dataclass
 class FlowData():
     """Flow data
+
+    See: https://www.wsdot.wa.gov/Traffic/api/Documentation/class_flow_data.html
     """
     FlowDataID: int = None
 
@@ -444,8 +498,10 @@ class FlowData():
         x, y = map(lambda name: props.pop(name, None),
                    ("FlowStationLocationLongitude", "FlowStationLocationLatitude"))
         geom = create_point_geo_interface(x, y)
+        flow_data_id = props.pop("FlowDataID")
         return {
             "type": "Feature",
+            "id": flow_data_id,
             "properties": props,
             "geometry": geom
         }
@@ -454,6 +510,8 @@ class FlowData():
 @dataclass
 class TravelTimeRoute():
     """Travel time route
+
+    See https://www.wsdot.wa.gov/Traffic/api/Documentation/class_travel_time_route.html
     """
     TravelTimeID: int = None
     Name: str = None
@@ -468,15 +526,17 @@ class TravelTimeRoute():
     def __post_init__(self):
         if isinstance(self.TimeUpdated, str):
             self.TimeUpdated = parse_wcf_date(self.TimeUpdated)
-        for name in ["StartPoint", "EndPoint"]:
+        for name in ["StartLocation", "EndLocation"]:
             val = getattr(self, name, None)
-            if isinstance(val, str):
-                setattr(self, name, parse_wcf_date(val))
+            if isinstance(val, dict):
+                setattr(self, name, RoadwayLocation(**val)) # pylint: disable=not-a-mapping
 
 
 @dataclass
 class WeatherInfo():
     """Weather info
+
+    See https://www.wsdot.wa.gov/Traffic/api/Documentation/class_weather_info.html
     """
     StationID: int = None
 
@@ -527,6 +587,29 @@ class WeatherInfo():
 @dataclass
 class TollRate():
     """Toll rate
+
+    See https://www.wsdot.wa.gov/Traffic/api/Documentation/class_traveler_a_p_i_1_1_models_1_1_toll_rate.html
+
+    Attention: The tolls reported here may not match what is currently displayed on
+    the road signs due to timing issues between WSDOT and the tolling contractor.
+
+    Attributes:
+        CurrentMessage: Message displayed on the sign in place of a toll
+        CurrentToll: The computed toll in cents which is sent to the tolling company,
+            may not match what is displayed on the sign due to timing issues
+        EndLatitude: Approximate geographical latitude of the end location
+        EndLocationName: Common name of the end location
+        EndLongitude: Approximate geographical longitude of the end location
+        EndMilepost: The end milepost for a toll trip
+        SignName: Name of sign
+        StartLatitude: Approximate geographical latitude of the start location
+        StartLocationName: Common name of the start location
+        StartLongitude: Approximate geographical longitude of the start location
+        StartMilepost: The start milepost for a toll trip
+        StateRoute: Route the toll applies to
+        TravelDirection: Travel direction the toll applies to
+        TripName: Name for the toll trip
+
     """
     SignName: str = None
     TripName: str = None
@@ -561,8 +644,9 @@ class TollRate():
 
 def parse(dct: dict):
     """Specialized JSON parsing for wsdottraffic.classes classes.
-    for use with the json.load and json.loads object_hook parameter.
+    For use with the json.load and json.loads object_hook parameter.
     """
+    # pylint: disable=too-many-return-statements
     if "BorderCrossingLocation" in dct:
         return BorderCrossingData(**dct)
     if "StructureID" in dct:

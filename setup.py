@@ -2,7 +2,7 @@
 """
 from codecs import open as codec_open
 from os import path
-from setuptools import setup, find_packages
+from setuptools import setup #, find_packages
 
 HERE = path.abspath(path.dirname(__file__))
 
@@ -11,7 +11,7 @@ with codec_open(path.join(HERE, "README.md"), encoding='utf-8') as f:
 
 setup(
     name="wsdottraffic",
-    version="3.1.0",
+    version="4.0.0",
     description="Retrieves data from WSDOT Traffic API",
     long_description=LONG_DESC,
     long_description_content_type="text/markdown",
@@ -27,24 +27,22 @@ setup(
         "Natural Language :: English",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Topic :: Scientific/Engineering :: GIS"
     ],
-    packages=find_packages(),
+    # packages=find_packages(),
+    packages=[
+        "wsdottraffic",
+        "wsdottraffic.classes",
+        "wsdottraffic.scanweb"
+    ],
     entry_points={
         'console_scripts': [
-            'wsdottrafficgp = wsdottraffic.gp.__main__:main',
-            'wsdottraffic = wsdottraffic.__main__:main',
-            'multipointtopoint = wsdottraffic.gp.multipointtopoint:main',
-            'zipgdb = wsdottraffic.gp.zipgdb:main'
+            'wsdottraffic = wsdottraffic.__main__:main'
         ]
-    },
-    package_data={
-        'wsdottraffic.gp': ["*.json"]
     }
+    # ,package_data={
+    #     'wsdottraffic.gp': ["*.json"]
+    # }
 )

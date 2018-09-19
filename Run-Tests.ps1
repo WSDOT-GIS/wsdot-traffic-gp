@@ -29,7 +29,7 @@ Write-Progress $activity
 $i = 0
 foreach ($pypath in $pyenvs) {
     # Run the unittests and store the error code as a variable.
-    $jobs += Start-Process -FilePath $pypath.FullName -ArgumentList "-m unittest discover --start-directory src" -PassThru -NoNewWindow -RedirectStandardError "$test_output_dir\Error$i.txt"
+    $jobs += Start-Process -FilePath $pypath.FullName -ArgumentList " -m unittest discover .\wsdottraffic\tests\" -PassThru -NoNewWindow -RedirectStandardError "$test_output_dir\Error$i.txt"
     $i++
 }
 

@@ -17,8 +17,7 @@ from .fielddetection import FieldInfo
 def _field_serializer(the_object):
     if isinstance(the_object, FieldInfo):
         return the_object.__dict__
-    else:
-        return the_object
+    return the_object
 
 
 CODE = _DEFAULT_ACCESS_CODE

@@ -14,6 +14,6 @@ print("\tCreating source distribution...")
 run(["python", "setup.py", "sdist"], check=True)
 
 print("\tCreating Universal Wheel...")
-run(["python", "setup.py", "bdist_wheel", "--universal"], check=True)
+run(["python", "setup.py", "bdist_wheel"], check=True)
 
 # remove("README.rst")

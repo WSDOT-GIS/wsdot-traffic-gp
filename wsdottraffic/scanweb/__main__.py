@@ -1,6 +1,5 @@
 from __future__ import print_function, unicode_literals
-import json
-from . import get_scanweb, ScanwebJsonEncoder
+from . import get_scanweb
 
 def main():
     print(get_scanweb())

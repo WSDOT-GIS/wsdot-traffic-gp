@@ -152,7 +152,8 @@ def split_camel_case(the_string: str) -> str:
 def parse_route_id(route_id: str or int) -> Tuple[str, str or None, str or None]:
     """Parses a route identifier into its component parts: SR, RRT, RRQ
 
-    For more details, see the Highway Log PDF files at http://www.wsdot.wa.gov/mapsdata/roadway/statehighwaylog.htm.
+    For more details, see the Highway Log PDF files at
+    http://www.wsdot.wa.gov/mapsdata/roadway/statehighwaylog.htm.
 
     Args:
         route_id: WSDOT route identifier (str) or route number (int).
@@ -180,6 +181,6 @@ def parse_route_id(route_id: str or int) -> Tuple[str, str or None, str or None]
     match = _ROUTE_ID_RE.match(route_id)
     if not match:
         raise SRFormatError(route_id)
-    if match:
+    else:
         parts = map(match.group, ("sr", "rrt", "rrq"))
         return tuple(parts)

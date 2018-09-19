@@ -233,10 +233,9 @@ def label_to_3_digit_id(label):
         route = int(match_dict["route"])
         # Return, padded with zeroes to three digits.
         return _left_pad_to_3_digits(route)
-    elif re.match(r"^\d{1,3}", label):
+    if re.match(r"^\d{1,3}", label):
         return _left_pad_to_3_digits(label)
-    else:
-        raise ValueError("Unexpected format: %s.", label)
+    raise ValueError("Unexpected format: %s.", label) # pylint: disable=raising-format-tuple
 
 
 def id_to_label(sr_id):

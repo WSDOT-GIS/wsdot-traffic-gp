@@ -35,13 +35,6 @@ This module provides the ability to query the REST endpoints and return the resu
 * Note that this script has no ArcGIS dependencies and can be run without any ArcGIS software installed.
 * Should run in either v2.7+ or v3.5.2+ of Python.
 
-### wsdottraffic.gp ###
-Consume the REST endpoints and return the results as a file geodatabase.
-
-* Requires ArcPy
-* Should work with either ArcGIS Desktop or ArcGIS Pro, and the versions of Python that they come with.
-
-
 Scripts
 -------
 
@@ -49,24 +42,6 @@ You can get help for any of the scripts using the `-h` argument.
 
 ```console
 python -m wsdottraffic -h
-```
-
-### wsdottraffic.gp / wsdottrafficgp ###
-
-* Downloads data from API
-* Creates feature class and tables if not already existing
-* If tables exist, truncates them
-* Inserts the data into feature classes and tables inside of a file geodatabase.
-* Zips the file geodatabase (which is a folder w/ `.gdb` extension).
-
-```console
-python -m wsdottraffic.gp.creategdb
-```
-
-or
-
-```console
-wsdottrafficgp
 ```
 
 ### wsdottraffic.dumpjson / wsdottraffic ###
@@ -83,28 +58,8 @@ or
 wsdottraffic
 ```
 
-### wsdottraffic.gp.multipointtopoint / multipointtopoint ###
-
-Calls the [Multipart to Singlepart] tool for each multipoint feature class in a geodatabase. Added feature classes will have the same name as its source, but with the added suffix *_singlepart*.
-
-```console
-python -m wsdottraffic.gp.multipointtopoint YourGDBNameHere.gdb
-```
-
-or
-
-```console
-multipointtosinglepoint YourGDBNameHere.gdb
-```
-
 Notes for developers
 --------------------
-
-The example below shows how to run one of the scripts from within the project directory
-
-```console
-python -m src.wsdottraffic.gp.creategdb
-```
 
 ### Unit tests (`test_*.py`) ###
 

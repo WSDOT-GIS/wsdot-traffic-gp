@@ -4,7 +4,10 @@
 from __future__ import unicode_literals, print_function, absolute_import, division
 import json
 import datetime
+from typing import Sequence
+from dataclasses import dataclass
 from sys import stderr
+
 import dateutil.parser
 import requests
 from ..resturls import URLS
@@ -12,6 +15,7 @@ from .. import _DEFAULT_ACCESS_CODE
 
 # pylint: disable=invalid-name,too-few-public-methods
 
+@dataclass
 class SurfaceMeasurements():
     """Surface Measurement
 
@@ -21,13 +25,12 @@ class SurfaceMeasurements():
         RoadFreezingTemperature: decimal
         RoadSurfaceCondition: int
     """
-    def __init__(self, **kwargs):
-        self.SensorId = kwargs.get("SensorId")
-        self.SurfaceTemperature = kwargs.get("SurfaceTemperature")
-        self.RoadFreezingTemperature = kwargs.get("RoadFreezingTemperature")
-        self.RoadSurfaceCondition = kwargs.get("RoadSurfaceCondition")
+    SensorId: int
+    SurfaceTemperature: float
+    RoadFreezingTemperature: float
+    RoadSurfaceCondition: int
 
-
+@dataclass
 class SubSurfaceMeasurements():
     """Sub-Surface Measurement
 
@@ -35,11 +38,11 @@ class SubSurfaceMeasurements():
         SensorId: byte
         SubSurfaceTemperature: decimal
     """
-    def __init__(self, **kwargs):
-        self.SensorId = kwargs.get("SensorId")
-        self.SubSurfaceTemperature = kwargs.get("SubSurfaceTemperature")
+    SensorId: int
+    SubSurfaceTemperature: float
 
 
+@dataclass
 class WeatherReading():
     """Scanweb Weather Reading
 
@@ -70,7 +73,32 @@ class WeatherReading():
         SubSurfaceMeasurements: Sequence[ScanwebSubSurfaceMeasurements]
     """
 
-    def __init__(self, **kwargs):
+    StationId: str = None
+    StationName: str = None
+    Latitude: float = None
+    Longitude: float = None
+    Elevation: int = None
+    ReadingTime: datetime.datetime = None
+    AirTemperature: float = None
+    RelativeHumidty: int = None
+    AverageWindSpeed: int = None
+    AverageWindDirection: int = None
+    WindGust: int = None
+    Visibility: int = None
+    PrecipitationIntensity: int = None
+    PrecipitationType: int = None
+    PrecipitationPast1Hour: float = None
+    PrecipitationPast3Hours: float = None
+    PrecipitationPast6Hours: float = None
+    PrecipitationPast12Hours: float = None
+    PrecipitationPast24Hours: float = None
+    PrecipitationAccumulation: float = None
+    BarometricPressure: int = None
+    SnowDepth: int = None
+    SurfaceMeasurements: Sequence[SurfaceMeasurements] = None
+    SubSurfaceMeasurements: Sequence[SubSurfaceMeasurements] = None
+
+    def __post_init__(self):
         """Scanweb Weather Reading
 
         Args:
@@ -99,48 +127,22 @@ class WeatherReading():
             SurfaceMeasurements: Sequence[ScanwebSurfaceMeasurements]
             SubSurfaceMeasurements: Sequence[ScanwebSubSurfaceMeasurements]
         """
-        self.StationId = kwargs.get("StationId")
-        self.StationName = kwargs.get("StationName")
-        self.Latitude = kwargs.get("Latitude")
-        self.Longitude = kwargs.get("Longitude")
-        self.Elevation = kwargs.get("Elevation")
-        self.ReadingTime = None
-        if "ReadingTime" in kwargs:
-            date_str = kwargs.get("ReadingTime")
-            if date_str:
-                self.ReadingTime = dateutil.parser.parse(date_str)
-        self.AirTemperature = kwargs.get("AirTemperature")
-        self.RelativeHumidity = kwargs.get("RelativeHumidty")
-        self.AverageWindSpeed = kwargs.get("AverageWindSpeed")
-        self.AverageWindDirection = kwargs.get("AverageWindDirection")
-        self.WindGust = kwargs.get("WindGust")
-        self.Visibility = kwargs.get("Visibility")
-        self.PrecipitationIntensity = kwargs.get("PrecipitationIntensity")
-        self.PrecipitationType = kwargs.get("PrecipitationType")
-        self.PrecipitationPast1Hour = kwargs.get("PrecipitationPast1Hour")
-        self.PrecipitationPast3Hours = kwargs.get("PrecipitationPast3Hours")
-        self.PrecipitationPast6Hours = kwargs.get("PrecipitationPast6Hours")
-        self.PrecipitationPast12Hours = kwargs.get("PrecipitationPast12Hours")
-        self.PrecipitationPast24Hours = kwargs.get("PrecipitationPast24Hours")
-        self.PrecipitationAccumulation = kwargs.get("PrecipitationAccumulation")
-        self.BarometricPressure = kwargs.get("BarometricPressure")
-        self.SnowDepth = kwargs.get("SnowDepth")
+        if isinstance(self.ReadingTime, str):
+            self.ReadingTime = dateutil.parser.parse(self.ReadingTime)
 
-        measure_list = kwargs.get("SurfaceMeasurements")
-        new_list = []
-        if measure_list:
-            for item in measure_list:
-                new_obj = SurfaceMeasurements(**item)
-                new_list.append(new_obj)
-        self.SurfaceMeasurements = new_list
+        ctor: SurfaceMeasurements or SubSurfaceMeasurements = None
+        for attrib_name in ("SurfaceMeasurements", "SubSurfaceMeasurements"):
+            new_list = getattr(attrib_name, None)
+            if new_list is None:
+                continue
 
-        measure_list = kwargs.get("SubSurfaceMeasurements")
-        new_list = []
-        if measure_list:
-            for item in measure_list:
-                new_obj = SubSurfaceMeasurements(**item)
-                new_list.append(new_obj)
-        self.SubSurfaceMeasurements = new_list
+            if attrib_name == "SurfaceMeasurements":
+                ctor = SurfaceMeasurements
+            else:
+                ctor = SubSurfaceMeasurements
+
+            new_list = map(lambda item: ctor(**item))
+            setattr(attrib_name, new_list)
 
 class ScanwebJsonEncoder(json.JSONEncoder):
     """Custom JSONEncoder class for use with the cls argument of json.dump and json.dumps.
