@@ -30,7 +30,7 @@ else:
     _DEFAULT_ACCESS_CODE = None
 
 
-_NO_CODE_MESSAGE = "No access code provided. Must be provided either by parameter or WSDOT_TRAFFIC_API_CODE environment variable."
+_NO_CODE_MESSAGE = "No access code provided. Must be provided either by parameter or WSDOT_TRAFFIC_API_CODE environment variable." # pylint:disable=line-too-long
 
 
 def get_traveler_info_json(dataname, accesscode=_DEFAULT_ACCESS_CODE):

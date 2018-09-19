@@ -1,8 +1,11 @@
 """
 Provides a list of URLs for REST endpoints.
 """
+# pylint:disable=line-too-long
+
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+
 
 API_BASE = "https://www.wsdot.wa.gov/Traffic/api"
 

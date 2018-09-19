@@ -8,7 +8,7 @@ import re
 from typing import Tuple
 
 WCF_DATE_RE = re.compile(
-    r"\/Date\((?P<ms_since_1970_1_1>\d+)(?P<utc_offset>(?P<offset_sign>[+\-])(?P<offset_hrs>\d{2})(?P<offset_min>\d{2}))\)\/", re.IGNORECASE)
+    r"\/Date\((?P<ms_since_1970_1_1>\d+)(?P<utc_offset>(?P<offset_sign>[+\-])(?P<offset_hrs>\d{2})(?P<offset_min>\d{2}))\)\/", re.IGNORECASE)  # pylint:disable=line-too-long
 _CAMEL_CASE_RE = re.compile(r"(?:[A-Z][a-z]+)")
 
 # ==RRTs (Related Roadway Type)==
@@ -63,14 +63,18 @@ class SRFormatError(ValueError):
         return msg_fmt % self.value
 
 
-def parse_wcf_date(wcf_date: str, throw_on_wrong_format: bool = False, output_utc: bool = True) -> datetime.datetime or str:
+def parse_wcf_date(
+        wcf_date: str,
+        throw_on_wrong_format: bool = False,
+        output_utc: bool = True) -> datetime.datetime or str:
     """Parses a WCF serialized date to a date string.
 
     See https://docs.microsoft.com/en-us/dotnet/framework/wcf/feature-details/stand-alone-json-serialization#datetime-wire-format
 
     Args:
         wcf_date: str. A date/time in WCF JSON serialized format.
-        throw_on_wrong_format: Set to True to throw error on wrong format, False (default) to simply return original string.
+        throw_on_wrong_format: Set to True to throw error on wrong format, False (default) to simply
+            return original string.
         output_utc: Set to True (default) to output UTC time, false to include timezone info.
             This value will be ignored if the input wcf_date string does not include timezone info.
             See https://docs.python.org/3/library/datetime.html#timezone-objects
@@ -90,7 +94,8 @@ def parse_wcf_date(wcf_date: str, throw_on_wrong_format: bool = False, output_ut
 
         ticks = None
         if not output_utc and len(groups) >= 2:
-            # Use timezone info. See https://docs.python.org/3/library/datetime.html#timezone-objects
+            # Use timezone info. See
+            # https://docs.python.org/3/library/datetime.html#timezone-objects
             groupdict = match.groupdict()
             ticks = int(groupdict["ms_since_1970_1_1"]) / 1000
             hrs = int(groupdict["offset_hrs"])

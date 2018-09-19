@@ -75,8 +75,10 @@ class RoadwayLocation():
     See https://www.wsdot.wa.gov/Traffic/api/Documentation/class_roadway_location.html
 
     Attributes:
-        Description: A description of the location. This could be a cross street or a nearby landmark.
-        Direction: The side of the road the location is on (Northbound, Southbound). This does not necessarily correspond to an actual compass direction.
+        Description: A description of the location. This could be a cross street or a
+            nearby landmark.
+        Direction: The side of the road the location is on (Northbound, Southbound).
+            This does not necessarily correspond to an actual compass direction.
         Latitude: Latitude of the location.
         Longitude: Longitude of the location.
         MilePost: The milepost of the location.
@@ -128,7 +130,8 @@ class BorderCrossingData():
     def __post_init__(self):
         if self.Time and isinstance(self.Time, str):
             self.Time = parse_wcf_date(self.Time)
-        if self.BorderCrossingLocation and not isinstance(self.BorderCrossingLocation, RoadwayLocation):
+        if (self.BorderCrossingLocation and not
+                isinstance(self.BorderCrossingLocation, RoadwayLocation)):
             self.BorderCrossingLocation = RoadwayLocation(
                 **self.BorderCrossingLocation)  # pylint:disable=not-a-mapping
 
@@ -529,7 +532,8 @@ class TravelTimeRoute():
         for name in ["StartLocation", "EndLocation"]:
             val = getattr(self, name, None)
             if isinstance(val, dict):
-                setattr(self, name, RoadwayLocation(**val)) # pylint: disable=not-a-mapping
+                setattr(self, name, RoadwayLocation(**val)
+                        )  # pylint: disable=not-a-mapping
 
 
 @dataclass

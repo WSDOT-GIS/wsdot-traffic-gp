@@ -1,1 +1,0 @@
-pylint wsdottraffic -f json | ConvertFrom-Json

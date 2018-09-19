@@ -31,11 +31,12 @@ def main():
     """
     arg_parser = ArgumentParser(
         description="Dumps data from the WSDOT Traffic API to JSON files.")
-    arg_parser.add_argument("--raw", action="store_true", help="Dumps unprocessed JSON output from services")
+    arg_parser.add_argument(
+        "--raw", action="store_true",
+        help="Dumps unprocessed JSON output from services")
     arg_parser.add_argument(
         "api_code", nargs="?",
-        help="WSDOT Traveler API code. This parameter can be omitted if the %s\
- environment variable is defined." % ENVIRONMENT_VAR_NAME)
+        help="WSDOT Traveler API code. This parameter can be omitted if the %s environment variable is defined." % ENVIRONMENT_VAR_NAME)  # pylint:disable=line-too-long
     args = arg_parser.parse_args()
     api_code = args.api_code
     if not api_code:

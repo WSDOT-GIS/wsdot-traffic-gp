@@ -2,6 +2,7 @@
 geodatabase fields.
 """
 
+# pylint:disable=too-many-branches,too-few-public-methods
 
 from __future__ import (
     absolute_import, print_function, unicode_literals, division)

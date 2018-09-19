@@ -132,7 +132,7 @@ class WeatherReading():
 
         ctor: SurfaceMeasurements or SubSurfaceMeasurements = None
         for attrib_name in ("SurfaceMeasurements", "SubSurfaceMeasurements"):
-            new_list = getattr(attrib_name, None)
+            new_list = getattr(self, attrib_name, None)
             if new_list is None:
                 continue
 
@@ -141,8 +141,8 @@ class WeatherReading():
             else:
                 ctor = SubSurfaceMeasurements
 
-            new_list = map(lambda item: ctor(**item))
-            setattr(attrib_name, new_list)
+            new_list = tuple(map(lambda item: ctor(**item), new_list))
+            setattr(self, attrib_name, new_list)
 
 class ScanwebJsonEncoder(json.JSONEncoder):
     """Custom JSONEncoder class for use with the cls argument of json.dump and json.dumps.
