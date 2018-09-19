@@ -1,7 +1,7 @@
 wsdot-traffic-gp
 ================
 
-The scripts in this repository can be used to consume [WSDOT Traveler Information API] REST endpoints in [ArcGIS]  software.
+This package is used for consuming the [WSDOT Traveler Information API] REST endpoints.
 
 [![Build Status](https://travis-ci.org/WSDOT-GIS/wsdot-traffic-gp.svg?branch=master)](https://travis-ci.org/WSDOT-GIS/wsdot-traffic-gp)
 
@@ -12,8 +12,15 @@ Setup
 
 To install this package onto your computer using pip, use the following command. For more information on installing packages, see the [Installing Packages] tutorial from the *PyPA Python Packaging User Guide*.
 
+#### All users (requires admin access)
+
 ```console
 pip install wsdottraffic
+```
+#### For current user only
+
+```console
+pip install wsdottraffic --user
 ```
 
 If you are running this command from PowerShell, you will need to have administrator privileges.
@@ -23,6 +30,7 @@ Start-Process pip "install wsdottraffic" -Verb RunAs
 ```
 
 ### Default access code ###
+
 You can set a default access code, so you don't need to provide it via function parameter or script argument, by setting an environment variable called `WSDOT_TRAFFIC_API_CODE` to the default access code.
 
 Modules
@@ -30,10 +38,8 @@ Modules
 See the modules' [docstrings] for more details on how to use the scripts.
 
 ### wsdottraffic ###
-This module provides the ability to query the REST endpoints and return the results as a dictionary.
 
-* Note that this script has no ArcGIS dependencies and can be run without any ArcGIS software installed.
-* Should run in either v2.7+ or v3.5.2+ of Python.
+This module provides the ability to query the REST endpoints and return the results as a dictionary.
 
 Scripts
 -------
@@ -61,18 +67,14 @@ wsdottraffic
 Notes for developers
 --------------------
 
-### Unit tests (`test_*.py`) ###
+### Unit tests (`wsdottraffic.tests`) ###
+
+Unit tests are defined in the `wsdottraffic/tests` folder.
 
 These are test scripts for use with the [unittest] Python module.
 
-### PowerShell scripts for developers ###
-
-The PowerShell scripts are intended for use by developers working on this project and are not used by consumers of the library. Use the [Get-Help] command for more info on these scripts.
-
 [ArcGIS]:http://resources.arcgis.com/
 [docstrings]:https://en.wikipedia.org/wiki/Docstring#Python
-[Get-Help]:https://msdn.microsoft.com/en-us/powershell/reference/5.1/microsoft.powershell.core/get-help
 [Installing Packages]:https://packaging.python.org/tutorials/installing-packages/
-[Multipart to Singlepart]:https://pro.arcgis.com/en/pro-app/tool-reference/data-management/multipart-to-singlepart.htm
 [unittest]:https://docs.python.org/3/library/unittest.html
 [WSDOT Traveler Information API]:http://www.wsdot.wa.gov/Traffic/api/
