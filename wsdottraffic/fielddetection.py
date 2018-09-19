@@ -49,16 +49,15 @@ def _compare_types(name1, name2):
     """
     if name1 == name2:
         return 0
-    elif _TYPE_RANKS[name1] == _TYPE_RANKS[name2]:
+    if _TYPE_RANKS[name1] == _TYPE_RANKS[name2]:
         raise ValueError("Incompatible types: %s & %s" % (name1, name2))
-    elif name1 is None:
+    if name1 is None:
         return -1
-    elif name2 is None:
+    if name2 is None:
         return 1
-    elif _TYPE_RANKS[name1] > _TYPE_RANKS[name2]:
+    if _TYPE_RANKS[name1] > _TYPE_RANKS[name2]:
         return 1
-    else:
-        return -1
+    return -1
 
 
 def _get_field_type(value):

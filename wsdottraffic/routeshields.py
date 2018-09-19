@@ -213,13 +213,14 @@ _FMT_DICT = {
 }
 
 
-# def _left_pad_to_3_digits(num: str or int) -> str:
 def _left_pad_to_3_digits(num):
+    # (str or int) -> str
     return "{:0>3}".format(num)
 
 
 # def label_to_3_digit_id(label: str or int) -> str:
 def label_to_3_digit_id(label):
+    # (str or int or float) -> str
     """Converts a label with a route type prefix to
     three-digit route ID.
     """
@@ -238,8 +239,8 @@ def label_to_3_digit_id(label):
         raise ValueError("Unexpected format: %s.", label)
 
 
-# def id_to_label(sr_id: int or str) -> str:
 def id_to_label(sr_id):
+    # (str or int or float) -> str
     """Converts a state route ID into a label.
     E.g., "005" -> "I-5"
     """

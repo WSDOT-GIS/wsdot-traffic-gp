@@ -14,6 +14,7 @@ from .routeshields import label_to_3_digit_id
 
 
 def _simplify_field_name(field_name):
+    # (str) -> str
     """Returns simplified versions of field names from the API are
     unnecessarily complex.
     """
@@ -61,11 +62,12 @@ def _simplify_field_name(field_name):
 
 
 def parse_traveler_info_object(dct):
+    # (dict) -> dict
     """This method is used by the json.load method to customize how the
     traffic info objects are deserialized.
-    @type dct: dict
-    @return: dictionary with flattened JSON output
-    @rtype: dict
+
+    Returns:
+        dictionary with flattened JSON output
     """
     output = {}
     bad_route_name = re.compile(r"^\D{1,2}[-\s]+\d{1,3}$")
@@ -103,11 +105,12 @@ def parse_traveler_info_object(dct):
     return output
 
 def to_geo_json(dct):
+    # (dict) -> dict
     """This method is used by the json.load method to customize how
     the traffic info objects are deserialized.
-    @type dct: dict
-    @return: dictionary with GeoJSON output
-    @rtype: dict
+
+    Returns:
+        dictionary with GeoJSON output
     """
     outdict = {
         "type": "Feature",
@@ -147,6 +150,7 @@ def to_geo_json(dct):
 
 
 def dict_list_to_geojson(dicts):
+    # (Sequence[dict]) -> dict
     """Converts a list of dicts, returned from parse_traveler_info_object
     into a GeoJSON FeatureCollection.
     """
@@ -164,7 +168,7 @@ class CustomEncoder(json.JSONEncoder):
     Outputs dates as ISO format string.
     """
 
-    def default(self, obj):  # pylint: disable=method-hidden
-        if isinstance(obj, (datetime.datetime, datetime.date, datetime.time)):
-            return obj.isoformat()
-        return super().default(obj)
+    def default(self, o):  # pylint: disable=method-hidden
+        if isinstance(o, (datetime.datetime, datetime.date, datetime.time)):
+            return o.isoformat()
+        return super().default(o)

@@ -148,7 +148,7 @@ class ScanwebJsonEncoder(json.JSONEncoder):
     def default(self, o): # pylint: disable=method-hidden
         if isinstance(o, datetime.datetime):
             return o.isoformat()
-        elif isinstance(o, (WeatherReading, SurfaceMeasurements, SubSurfaceMeasurements)):
+        if isinstance(o, (WeatherReading, SurfaceMeasurements, SubSurfaceMeasurements)):
             return o.__dict__
         return json.JSONEncoder.default(self, o)
 

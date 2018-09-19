@@ -5,8 +5,10 @@ from __future__ import (absolute_import, division, print_function,
 import datetime
 import time
 import re
+from typing import Tuple
 
-WCF_DATE_RE = re.compile(r"\/Date\((?P<ms_since_1970_1_1>\d+)(?P<utc_offset>(?P<offset_sign>[+\-])(?P<offset_hrs>\d{2})(?P<offset_min>\d{2}))\)\/", re.IGNORECASE)
+WCF_DATE_RE = re.compile(
+    r"\/Date\((?P<ms_since_1970_1_1>\d+)(?P<utc_offset>(?P<offset_sign>[+\-])(?P<offset_hrs>\d{2})(?P<offset_min>\d{2}))\)\/", re.IGNORECASE)
 _CAMEL_CASE_RE = re.compile(r"(?:[A-Z][a-z]+)")
 
 # ==RRTs (Related Roadway Type)==
@@ -47,6 +49,7 @@ _ROUTE_ID_RE = re.compile(r"""^(?P<sr>\d{3})
 class SRFormatError(ValueError):
     """Error for an invalid state route ID.
     """
+
     def __init__(self, value):
         """Creates a new instance
         """
@@ -60,17 +63,24 @@ class SRFormatError(ValueError):
         return msg_fmt % self.value
 
 
-def parse_wcf_date(wcf_date, throw_on_wrong_format=False, output_utc=True):
+def parse_wcf_date(wcf_date: str, throw_on_wrong_format: bool = False, output_utc: bool = True) -> datetime.datetime or str:
     """Parses a WCF serialized date to a date string.
-    :param wcf_date: A date/time in WCF JSON serialized format.
-    :type wcf_date: str
-    :param throw_on_wrong_format: Set to True to throw error on wrong format,
-        False (default) to simply return original string.
-    :param output_utc: Set to True (default) to output UTC time, false to include timezone info.
-        This value will be ignored if the input wcf_date string does not include timezone info.
-    :type output_utc: bool
-    :rtype: datetime.datetime or str or unicode
-    :see: https://docs.microsoft.com/en-us/dotnet/framework/wcf/feature-details/stand-alone-json-serialization#datetime-wire-format
+
+    See https://docs.microsoft.com/en-us/dotnet/framework/wcf/feature-details/stand-alone-json-serialization#datetime-wire-format
+
+    Args:
+        wcf_date: str. A date/time in WCF JSON serialized format.
+        throw_on_wrong_format: Set to True to throw error on wrong format, False (default) to simply return original string.
+        output_utc: Set to True (default) to output UTC time, false to include timezone info.
+            This value will be ignored if the input wcf_date string does not include timezone info.
+            See https://docs.python.org/3/library/datetime.html#timezone-objects
+
+    Raises:
+        TypeError: raised if wcf_date is not a string.
+        ValueError: raised if wcf_date could not be parsed and thow_on_wrong_format is set to True.
+
+    Returns:
+        datetime.datetime or str
     """
     if not isinstance(wcf_date, str):
         raise TypeError("Only str and unicode types are supported.")
@@ -97,7 +107,6 @@ def parse_wcf_date(wcf_date, throw_on_wrong_format=False, output_utc=True):
             ticks = int(groups[0]) / 1000
             return datetime.datetime.utcfromtimestamp(ticks)
 
-
     elif throw_on_wrong_format:
         raise ValueError("Could not parse as a WCF date string: %s." %
                          wcf_date)
@@ -105,8 +114,17 @@ def parse_wcf_date(wcf_date, throw_on_wrong_format=False, output_utc=True):
         return wcf_date
 
 
-def to_wcf_date(date_obj):
+def to_wcf_date(date_obj: datetime.datetime or datetime.date or datetime.time) -> str:
     """Converts a datetime.datetime object into a WCF date format string.
+
+    Args:
+        date_obj: A Python date and/or time object.
+
+    Returns:
+        Returns a WCF string representation of the input date/time.
+
+    Raises:
+        TypeError: Raised if input is not one of the expected Python date/time types.
     """
     if not isinstance(date_obj, (datetime.datetime, datetime.date,
                                  datetime.time)):
@@ -115,21 +133,39 @@ def to_wcf_date(date_obj):
     return "/Date(%d)/" % ticks
 
 
-def split_camel_case(the_string):
+def split_camel_case(the_string: str) -> str:
     """Splits a camel case word into individual words separated by spaces
-    :param the_string: A camel-case word.
-    :type the_string: str
-    :rtype: str
+
+    Args:
+        the_string: A camel-case word.
+
+    Returns:
+        A string with the words separated by spaces.
+        Returns None if the_string was None.
     """
     if the_string is not None:
         words = _CAMEL_CASE_RE.findall(the_string)
         return " ".join(words)
-    else:
-        return None
+    return None
 
 
-def parse_route_id(route_id):
+def parse_route_id(route_id: str or int) -> Tuple[str, str or None, str or None]:
     """Parses a route identifier into its component parts: SR, RRT, RRQ
+
+    For more details, see the Highway Log PDF files at http://www.wsdot.wa.gov/mapsdata/roadway/statehighwaylog.htm.
+
+    Args:
+        route_id: WSDOT route identifier (str) or route number (int).
+
+    Returns:
+        A tuple with the following three values:
+        - SR: A three-digit number, padded with zeroes if necessary.
+        - RRT: Related Route Type. Will be None if not applicable to input route_id
+        - RRQ: Related Route Qualifier. Will be None if not applicable to input
+            route_id and will always be None if RRT is None.
+
+    Raises:
+        SRFormatError: raised if the route_id cannot be parsed.
     """
     # Convert integer to three-digit route ID.
     if isinstance(route_id, int):

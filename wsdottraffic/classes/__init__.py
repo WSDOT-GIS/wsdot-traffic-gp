@@ -1,5 +1,6 @@
 """Defines Python data classes for Traffic API
 """
+# pylint: disable=invalid-name
 import copy
 import datetime
 from dataclasses import dataclass
@@ -46,14 +47,16 @@ class RoadwayLocation():
     Longitude: float = None
 
     @property
-    def as_geometry(self):
+    def as_geometry(self) -> dict:
+        """Converts to __geo_interface__ Point.
+        """
         return {
             "type": "Point",
             "coodrinates": tuple(self.Longitude, self.Latitude)
         }
 
     @property
-    def __geo_interface__(self):
+    def __geo_interface__(self) -> dict:
         props: dict
         props = self.__dict__.copy()
         x = props.pop("Longitude")
@@ -82,17 +85,19 @@ class BorderCrossingData():
             self.Time = parse_wcf_date(self.Time)
         if self.BorderCrossingLocation and not isinstance(self.BorderCrossingLocation, RoadwayLocation):
             self.BorderCrossingLocation = RoadwayLocation(
-                **self.BorderCrossingLocation)
+                **self.BorderCrossingLocation)  # pylint:disable=not-a-mapping
 
     @property
     def __geo_interface__(self):
-        output: dict
-        output = self.BorderCrossingLocation.__geo_interface__
-        prop_dict: dict = output["Properties"]
-        for key in tuple("Time", "CrossingName", "WaitTime"):
-            prop_dict[key] = self.__dict__[key]
-
-        return output
+        props = dict(flatten_dict(self.__dict__))
+        x, y = map(props.pop, ("BorderCrossingLongitude",
+                               "BorderCrossingLatitude"))
+        geo = create_point_geo_interface(x, y)
+        return {
+            "type": "Feature",
+            "properties": props,
+            "geometry": geo
+        }
 
 
 @dataclass
@@ -123,10 +128,9 @@ class BridgeDataGIS():
     @property
     def __geo_interface__(self):
         output = self.__dict__.copy()
-        x1 = output.pop("BeginLongitude")
-        y1 = output.pop("BeginLatitude")
-        x2 = output.pop("EndLongitude")
-        y2 = output.pop("EndLatitude")
+
+        x1, y1, x2, y2 = map(
+            output.pop, ("BeginLongitude", "BeginLatitude", "EndLongitude", "EndLatitude"))
 
         geom = {}
         geom["type"] = "MultiPoint"
@@ -164,7 +168,7 @@ class CVRestrictionData():
     Latitude: float = None
     Longitude: float = None
     BridgeNumber: str = None
-    MaximumGrossVehicleWeightInPounds: int = None
+    MaximumGrossVehicleWeightInPounds: int = None  # pylint: disable=invalid-name
     BridgeName: str = None
     BLMaxAxle: int = None
     CL8MaxAxle: int = None
@@ -177,7 +181,7 @@ class CVRestrictionData():
 
     def __post_init__(self):
         if not isinstance(self.RestrictionType, CommercialVehicleRestrictionType):
-            self.RestrictionType = CommercialVehicleRestrictionType(
+            self.RestrictionType = CommercialVehicleRestrictionType(  # pylint: disable=invalid-name
                 self.RestrictionType)
         for name in ("DatePosted", "DateEffective", "DateExpires"):
             val = getattr(self, name, None)
@@ -300,7 +304,8 @@ class Camera():
 
     def __post_init__(self):
         if self.CameraLocation is not None and not isinstance(self.CameraLocation, RoadwayLocation):
-            self.CameraLocation = RoadwayLocation(**self.CameraLocation)
+            self.CameraLocation = RoadwayLocation(
+                **self.CameraLocation)  # pylint:disable=not-a-mapping
 
     @property
     def __geo_interface__(self):
@@ -371,9 +376,11 @@ class PassCondition():
         if isinstance(self.DateUpdated, str):
             self.DateUpdated = parse_wcf_date(self.DateUpdated)
         if not isinstance(self.RestrictionOne, TravelRestriction):
-            self.RestrictionOne = TravelRestriction(**self.RestrictionOne)
+            self.RestrictionOne = TravelRestriction(
+                **self.RestrictionOne)  # pylint:disable=not-a-mapping
         if not isinstance(self.RestrictionTwo, TravelRestriction):
-            self.RestrictionTwo = TravelRestriction(**self.RestrictionTwo)
+            self.RestrictionTwo = TravelRestriction(
+                **self.RestrictionTwo)  # pylint:disable=not-a-mapping
 
     @property
     def __geo_interface__(self) -> dict:
@@ -552,7 +559,6 @@ class TollRate():
         }
 
 
-
 def parse(dct: dict):
     """Specialized JSON parsing for wsdottraffic.classes classes.
     for use with the json.load and json.loads object_hook parameter.
@@ -585,15 +591,15 @@ class TrafficJSONEncoder(json.JSONEncoder):
     Date objects are represented in ISO format strings rather than WCF date strings.
     """
 
-    def default(self, obj):
+    def default(self, o):  # pylint:disable=method-hidden
         """Converts the input object into a JSON serializable object.
         """
-        if isinstance(obj, enum.Enum):
-            return obj.name
-        if isinstance(obj, (datetime.datetime, datetime.date)):
-            return obj.isoformat()
-        if isinstance(obj, uuid.UUID):
-            return str(obj)
-        if not isinstance(obj, (BorderCrossingData, BridgeDataGIS, CVRestrictionData, Alert, Camera, PassCondition, FlowData, TravelTimeRoute, WeatherInfo, TollRate, RoadwayLocation)):
-            return super().default(obj)
-        return obj.__dict__
+        if isinstance(o, enum.Enum):
+            return o.name
+        if isinstance(o, (datetime.datetime, datetime.date)):
+            return o.isoformat()
+        if isinstance(o, uuid.UUID):
+            return str(o)
+        if not isinstance(o, (BorderCrossingData, BridgeDataGIS, CVRestrictionData, Alert, Camera, PassCondition, FlowData, TravelTimeRoute, WeatherInfo, TollRate, RoadwayLocation)):
+            return super().default(o)
+        return o.__dict__

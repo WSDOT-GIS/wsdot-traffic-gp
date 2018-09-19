@@ -4,7 +4,9 @@ from typing import Any, Iterator, Tuple, Sequence
 
 def dict_has_all_keys(dct: dict, *keys: Sequence[str]) -> bool:
     """Determines if a dict contains all of the given keys.
-    Returns True if all keys are contained in dict, False otherwise.
+
+    Returns:
+        True if all keys are contained in dict, False otherwise.
     """
     for key in keys:
         if key not in dct:

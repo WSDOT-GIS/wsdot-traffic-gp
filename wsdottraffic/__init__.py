@@ -30,18 +30,19 @@ else:
     _DEFAULT_ACCESS_CODE = None
 
 
-_NO_CODE_MESSAGE = "No access code provided. Must be provided either by \
-parameter or WSDOT_TRAFFIC_API_CODE environment variable."
+_NO_CODE_MESSAGE = "No access code provided. Must be provided either by parameter or WSDOT_TRAFFIC_API_CODE environment variable."
 
 
 def get_traveler_info_json(dataname, accesscode=_DEFAULT_ACCESS_CODE):
+    # (str, str) -> bytes
     """Gets the highway alerts data from the REST endpoint.
-    @param dataname: The name of the traffic data set to retrieve.
-    @type dataname: str
-    @param accesscode: Access code. (optional if default is provided.)
-    @type accesscode: str
-    @return: The JSON output from the rest endpoint
-    @rtype: bytes
+
+    Args:
+        dataname: str. The name of the traffic data set to retrieve.
+        accesscode: str. Access code. (optional if default is provided.)
+
+    Returns:
+        bytes. The JSON output from the rest endpoint
     """
     if not accesscode:
         if _DEFAULT_ACCESS_CODE:
@@ -55,13 +56,15 @@ def get_traveler_info_json(dataname, accesscode=_DEFAULT_ACCESS_CODE):
 
 
 def get_traveler_info(dataname, accesscode=_DEFAULT_ACCESS_CODE):
+    # (str, str) -> List[dict]
     """Gets the highway alerts data from the REST endpoint.
-    @param dataname: The name of the traffic data set to retrieve.
-    @type dataname: str
-    @param accesscode: Access code. (optional if default is provided.)
-    @type accesscode: str
-    @return: Returns a list of dict objects.
-    @rtype: list
+
+    Args:
+        dataname: str. The name of the traffic data set to retrieve.
+        accesscode: str. Access code. (optional if default is provided.)
+
+    Returns:
+        Returns a list of dict objects.
     """
     if not accesscode:
         raise TypeError(_NO_CODE_MESSAGE)
