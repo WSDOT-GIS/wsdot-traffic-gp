@@ -28,7 +28,7 @@ OUTDIR = "output"
 logging.getLogger(__name__)
 
 class CustomGeoJSONEncoder(json.JSONEncoder):
-    def default(self, o): # pylint:disable=E0202
+    def default(self, o): # pylint:disable=method-hidden
         if "__geo_interface__" in dir(o):
             return o.__geo_interface__
         return super().default(o)
@@ -74,8 +74,9 @@ def main():
         out_path = os.path.join(OUTDIR, "%s.%s" % (endpoint_name, ext))
         with open(out_path, 'w') as json_file:
             if args.geojson:
-                # geojson.dump(features, json_file, indent=True)
-                json.dump(features, json_file, cls=CustomGeoJSONEncoder, indent=True)
+                feature_collection = geojson.factory.FeatureCollection(features)
+                geojson.dump(feature_collection, json_file, indent=True)
+                # json.dump(features, json_file, cls=CustomGeoJSONEncoder, indent=True)
             else:
                 json.dump(features, json_file, cls=TrafficJSONEncoder, indent=True)
 

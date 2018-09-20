@@ -36,7 +36,7 @@ def flatten_dict(dct: dict or object, parent_key: str = None, json_safe:
     if not isinstance(dct, dict):
         dct = dataclasses.asdict(dct)
     for key, val in dct.items():
-        if isinstance(val, dict):
+        if isinstance(val, dict) or dataclasses.is_dataclass(val):
             if parent_key is not None:
                 yield from flatten_dict(val, parent_key + key)
             else:

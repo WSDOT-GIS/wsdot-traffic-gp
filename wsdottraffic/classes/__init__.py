@@ -27,7 +27,7 @@ def create_point_geo_interface(x: float, y: float) -> dict:
     return None
 
 
-def get_multipoint_feature(dct: dict, *xy_props: Sequence[str]):
+def get_multipoint_feature(dct: dict, *xy_props: Sequence[Sequence[str]]):
     """Converts a flattened dictionary into a multipoint feature
     geometry interface (__geo_interface__).
 
@@ -43,18 +43,12 @@ def get_multipoint_feature(dct: dict, *xy_props: Sequence[str]):
         raise ValueError("xy_props must have even number of elements")
     props = dict(flatten_dict(dct))
 
-    indexes = range(0, len(xy_props) - 2, 2)
     coords = []
-    for i in indexes:
-        x, y = map(xy_props.__getitem__, (i, i + 1))
-        coords.append((x, y))
-
-    # coords = []
-    # for x_key, y_key in xy_props:
-    #     x, y = map(dct.get, (x_key, y_key), (None,)*2)
-    #     if x is not None and y is not None:
-    #         coords.append((x, y))
-    # coords = (coords,)
+    for x_key, y_key in xy_props:
+        x, y = map(props.pop, (x_key, y_key), (None,)*2)
+        if x is not None and y is not None:
+            coords.append((x, y))
+    coords = tuple(coords)
     geo = {
         "type": "MultiPoint",
         "coordinates": coords
@@ -101,28 +95,34 @@ class RoadwayLocation():
     Latitude: float = None
     Longitude: float = None
 
-    @property
-    def as_geometry(self) -> dict:
-        """Converts to __geo_interface__ Point.
-        """
-        return {
-            "type": "Point",
-            "coodrinates": (self.Longitude, self.Latitude)
-        }
+    def __post_init__(self):
+        for name in ("Longitude", "Latitude"):
+            val = getattr(self, name, None)
+            if val == 0:
+                setattr(self, name, None)
 
-    @property
-    def __geo_interface__(self) -> dict:
-        props = dict(flatten_dict(self))
-        x = props.pop("Longitude", None)
-        y = props.pop("Latitude", None)
+    # @property
+    # def as_geometry(self) -> dict:
+    #     """Converts to __geo_interface__ Point.
+    #     """
+    #     return {
+    #         "type": "Point",
+    #         "coodrinates": (self.Longitude, self.Latitude)
+    #     }
 
-        return {
-            "type": "Feature",
-            "properties": {
-                "Description": props
-            },
-            "geometry": (x, y)
-        }
+    # @property
+    # def __geo_interface__(self):
+    #     props = dict(flatten_dict(self))
+    #     x = props.pop("Longitude", None)
+    #     y = props.pop("Latitude", None)
+
+    #     return {
+    #         "type": "Feature",
+    #         "properties": {
+    #             "Description": props
+    #         },
+    #         "geometry": (x, y)
+    #     }
 
 
 @dataclass
@@ -167,7 +167,7 @@ class BridgeDataGIS():
     LocationID: uuid.UUID
     StructureID: str = None
     StateRouteID: str = None
-    IsConnector: int = None
+    IsConnector: bool = None
     BeginLatitude: float = None
     BeginLongitude: float = None
     BeginMilePost: float = None
@@ -182,6 +182,8 @@ class BridgeDataGIS():
     BridgeName: str = None
 
     def __post_init__(self):
+        if self.IsConnector is not None and not isinstance(self.IsConnector, bool):
+            self.IsConnector = bool(self.IsConnector)
         if self.LocationID and not isinstance(self.LocationID, uuid.UUID):
             self.LocationID = uuid.UUID(self.LocationID)
 
@@ -251,6 +253,10 @@ class CVRestrictionData():
         if not isinstance(self.RestrictionType, CommercialVehicleRestrictionType):
             self.RestrictionType = CommercialVehicleRestrictionType(  # pylint: disable=invalid-name
                 self.RestrictionType)
+        for name in ("StartRoadwayLocation", "EndRoadwayLocation"):
+            val = getattr(self, name, None)
+            if val is not None and not isinstance(val, RoadwayLocation):
+                setattr(self, name, RoadwayLocation(**val))  # pylint: disable=not-a-mapping
         for name in ("DatePosted", "DateEffective", "DateExpires"):
             val = getattr(self, name, None)
             if isinstance(val, str):
@@ -448,7 +454,7 @@ class PassCondition():
             self.RestrictionTwo = TravelRestriction(**self.RestrictionTwo)  # pylint:disable=not-a-mapping
 
     @property
-    def __geo_interface__(self) -> dict:
+    def __geo_interface__(self):
         props = dict(flatten_dict(self))
 
         x = props.pop("Longitude", None)
@@ -500,14 +506,14 @@ class FlowData():
 
     FlowStationLocation: RoadwayLocation = None
 
-    FlowReadingValue: FlowStationReading = None
+    FlowReadingValue: FlowStationReading = FlowStationReading.Unknown
 
     def __post_init__(self):
         if isinstance(self.Time, str):
             self.Time = parse_wcf_date(self.Time)
         if not isinstance(self.FlowStationLocation, RoadwayLocation):
             self.FlowStationLocation = RoadwayLocation(
-                self.FlowStationLocation)
+                **self.FlowStationLocation) # pylint: disable=not-a-mapping
         if not isinstance(self.FlowReadingValue, FlowStationReading):
             self.FlowReadingValue = FlowStationReading(self.FlowReadingValue)
 
@@ -548,13 +554,13 @@ class TravelTimeRoute():
         for name in ["StartPoint", "EndPoint"]:
             val = getattr(self, name, None)
             if isinstance(val, dict):
-                setattr(self, name, RoadwayLocation(**val))  # pylint: disable=not-a-mapping
+                setattr(self, name, RoadwayLocation(**val)) # pylint: disable=not-a-mapping
 
     @property
     def __geo_interface__(self):
-        return get_multipoint_feature(self, "StartPointLongitude", "EndPointLongitude", "StartPointLatitude", "EndPointLatitude")
-
-
+        return get_multipoint_feature(
+            self, ("StartPointLongitude", "EndPointLongitude"),
+            ("StartPointLatitude", "EndPointLatitude"))
 
 
 @dataclass
@@ -563,9 +569,9 @@ class WeatherInfo():
 
     See https://www.wsdot.wa.gov/Traffic/api/Documentation/class_weather_info.html
     """
-    StationID: int = None
+    StationID: int
 
-    StationName: str = None
+    StationName: str
 
     Latitude: float = None
 
@@ -682,7 +688,7 @@ def parse(dct: dict):
         return Alert(**dct)
     if "CameraID" in dct:
         return Camera(**dct)
-    if "MountainPassID" in dct:
+    if "MountainPassId" in dct:
         return PassCondition(**dct)
     if "FlowDataID" in dct:
         return FlowData(**dct)
