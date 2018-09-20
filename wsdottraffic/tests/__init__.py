@@ -14,24 +14,24 @@ from wsdottraffic.routeshields import id_to_label, label_to_3_digit_id
 from wsdottraffic.dicttools import flatten_dict
 
 
-class TestTravelerInfo(unittest.TestCase):
-    """Defines a unit test test case
-    """
+# class TestTravelerInfo(unittest.TestCase):
+#     """Defines a unit test test case
+#     """
 
-    def perform_basic_tests(self, the_list):
-        """Performs tests common to all of the returned lists."""
-        self.assertIsInstance(the_list, list)
-        self.assertGreater(len(the_list), 0)
-        for current in the_list:
-            self.assertIsInstance(current, dict)
+#     def perform_basic_tests(self, the_list):
+#         """Performs tests common to all of the returned lists."""
+#         self.assertIsInstance(the_list, list)
+#         self.assertGreater(len(the_list), 0)
+#         for current in the_list:
+#             self.assertIsInstance(current, dict)
 
-    def test_endpoints(self):
-        """Tests the rest endpoints.
-        """
-        # Call the REST endpoints and test them.
-        for k in URLS:
-            dataset = get_traveler_info(k)
-            self.perform_basic_tests(dataset)
+#     def test_endpoints(self):
+#         """Tests the rest endpoints.
+#         """
+#         # Call the REST endpoints and test them.
+#         for k in URLS:
+#             dataset = get_traveler_info(k)
+#             self.perform_basic_tests(dataset)
 
 
 class RouteShieldsTest(unittest.TestCase):
@@ -80,6 +80,14 @@ class ClassTest(unittest.TestCase):
         }
 
         self.assertDictEqual(flat_dict, expected_output)
+
+        dict_key: str = None
+        for key, val in expected_output.items():
+            if isinstance(val, dict):
+                dict_key = key
+                break
+
+        self.assertIsNone(dict_key, "should not have nested dict. '%s'" % dict_key)
 
     def test_deserialize(self):
 

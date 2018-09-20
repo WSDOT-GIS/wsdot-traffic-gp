@@ -3,7 +3,7 @@
 # pylint: disable=invalid-name
 import copy
 import datetime
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 import enum
 import uuid
 import json
@@ -16,7 +16,7 @@ def create_point_geo_interface(x: float, y: float) -> dict:
     """Provided an X and Y coordinate, returns a __geo_interface__ Point dict.
     """
     if x and y:
-        coords = tuple(x, y)
+        coords = (x, y)
     else:
         coords = None
     if coords:
@@ -27,7 +27,7 @@ def create_point_geo_interface(x: float, y: float) -> dict:
     return None
 
 
-def get_multipoint_feature(dct: dict, *xy_props: Tuple[str, str]):
+def get_multipoint_feature(dct: dict, *xy_props: Sequence[str]):
     """Converts a flattened dictionary into a multipoint feature
     geometry interface (__geo_interface__).
 
@@ -39,19 +39,29 @@ def get_multipoint_feature(dct: dict, *xy_props: Tuple[str, str]):
     Returns:
         A dict defining a __geo_interface__
     """
+    if len(xy_props) % 2 != 0:
+        raise ValueError("xy_props must have even number of elements")
+    props = dict(flatten_dict(dct))
+
+    indexes = range(0, len(xy_props) - 2, 2)
     coords = []
-    for x_key, y_key in xy_props:
-        x, y = map(dct.get, (x_key, y_key), (None,)*2)
-        if x is not None and y is not None:
-            coords.append(tuple(x, y))
-    coords = tuple(coords)
+    for i in indexes:
+        x, y = map(xy_props.__getitem__, (i, i + 1))
+        coords.append((x, y))
+
+    # coords = []
+    # for x_key, y_key in xy_props:
+    #     x, y = map(dct.get, (x_key, y_key), (None,)*2)
+    #     if x is not None and y is not None:
+    #         coords.append((x, y))
+    # coords = (coords,)
     geo = {
         "type": "MultiPoint",
         "coordinates": coords
     }
     return {
         "type": "Feature",
-        "properties": dct,
+        "properties": props,
         "geometry": geo
     }
 
@@ -97,22 +107,21 @@ class RoadwayLocation():
         """
         return {
             "type": "Point",
-            "coodrinates": tuple(self.Longitude, self.Latitude)
+            "coodrinates": (self.Longitude, self.Latitude)
         }
 
     @property
     def __geo_interface__(self) -> dict:
-        props: dict
-        props = self.__dict__.copy()
-        x = props.pop("Longitude")
-        y = props.pop("Latitude")
+        props = dict(flatten_dict(self))
+        x = props.pop("Longitude", None)
+        y = props.pop("Latitude", None)
 
         return {
             "type": "Feature",
             "properties": {
                 "Description": props
             },
-            "geometry": tuple(x, y)
+            "geometry": (x, y)
         }
 
 
@@ -137,9 +146,10 @@ class BorderCrossingData():
 
     @property
     def __geo_interface__(self):
-        props = dict(flatten_dict(self.__dict__))
-        x, y = map(props.pop, ("BorderCrossingLongitude",
-                               "BorderCrossingLatitude"))
+        props = dict(flatten_dict(self))
+        x, y = map(props.pop, (
+            "BorderCrossingLocationLongitude",
+            "BorderCrossingLocationLatitude"), (None,)*2)
         geo = create_point_geo_interface(x, y)
         return {
             "type": "Feature",
@@ -177,22 +187,28 @@ class BridgeDataGIS():
 
     @property
     def __geo_interface__(self):
-        output = self.__dict__.copy()
+        props = dict(flatten_dict(self))
+
+        # Convert UUID to serializeable string
+        props["LocationID"] = str(self.LocationID)
 
         x1, y1, x2, y2 = map(
-            output.pop, ("BeginLongitude", "BeginLatitude", "EndLongitude", "EndLatitude"))
+            props.pop, ("BeginLongitude", "BeginLatitude", "EndLongitude", "EndLatitude"))
 
         geom = {}
         geom["type"] = "MultiPoint"
         if (x1 and y1 and x2 and y2):
-            geom["coordinates"] = tuple(tuple(x1, y1), tuple(x2, y2))
+            geom["coordinates"] = ((x1, y1), (x2, y2))
         elif (x1 and y1):
-            geom["coordinates"] = tuple(tuple(x1, y1))
+            geom["coordinates"] = ((x1, y1))
         elif (x2 and y2):
-            geom["coordinates"] = tuple(tuple(x2, y2))
+            geom["coordinates"] = ((x2, y2))
 
-        output["geometry"] = geom
-        return output
+        return {
+            "type": "Feature",
+            "properties": props,
+            "geometry": geom
+        }
 
 
 @dataclass
@@ -242,10 +258,11 @@ class CVRestrictionData():
 
     @property
     def __geo_interface__(self):
-        props = dict(flatten_dict(self.__dict__))
+        props = dict(flatten_dict(self))
+        x, y = map(props.pop, ("Longitude", "Latitude"), (None,)*2)
         geom = {
             "type": "Point",
-            "coordinates": tuple(map(props.pop, ("Longitude", "Latitude")))
+            "coordinates": (x,y)
         }
         return {
             "type": "Feature",
@@ -296,7 +313,7 @@ class Alert():
 
     @property
     def __geo_interface__(self):
-        return get_multipoint_feature(self.__dict__, (
+        return get_multipoint_feature(asdict(self), (
             "StartRoadwayLocationLongitude", "StartRoadwayLocationLatitude"
         ), (
             "EndRoadwayLocationLongitude", "EndRoadwayLocationLatitude"
@@ -360,7 +377,7 @@ class Camera():
 
     @property
     def __geo_interface__(self):
-        props = dict(flatten_dict(self.__dict__))
+        props = dict(flatten_dict(self))
 
         dx, dy, x, y = map(props.pop, (
             "DisplayLongitude",
@@ -426,25 +443,24 @@ class PassCondition():
         if isinstance(self.DateUpdated, str):
             self.DateUpdated = parse_wcf_date(self.DateUpdated)
         if not isinstance(self.RestrictionOne, TravelRestriction):
-            self.RestrictionOne = TravelRestriction(
-                **self.RestrictionOne)  # pylint:disable=not-a-mapping
+            self.RestrictionOne = TravelRestriction(**self.RestrictionOne)  # pylint:disable=not-a-mapping
         if not isinstance(self.RestrictionTwo, TravelRestriction):
-            self.RestrictionTwo = TravelRestriction(
-                **self.RestrictionTwo)  # pylint:disable=not-a-mapping
+            self.RestrictionTwo = TravelRestriction(**self.RestrictionTwo)  # pylint:disable=not-a-mapping
 
     @property
     def __geo_interface__(self) -> dict:
-        props = dict(flatten_dict(self.__dict__))
-        output = {
-            "type": "Feature",
-            "properties": props
-        }
+        props = dict(flatten_dict(self))
+
         x = props.pop("Longitude", None)
         y = props.pop("Latitude", None)
+        geometry: dict = None
         if (x and y):
-            output["geometry"] = create_point_geo_interface(x, y)
-        else:
-            output["geometry"] = None
+            geometry = create_point_geo_interface(x, y)
+        output = {
+            "type": "Feature",
+            "properties": props,
+            "geometry": geometry
+        }
         return output
 
 
@@ -497,7 +513,7 @@ class FlowData():
 
     @property
     def __geo_interface__(self):
-        props = dict(flatten_dict(self.__dict__))
+        props = dict(flatten_dict(self))
         x, y = map(lambda name: props.pop(name, None),
                    ("FlowStationLocationLongitude", "FlowStationLocationLatitude"))
         geom = create_point_geo_interface(x, y)
@@ -529,11 +545,16 @@ class TravelTimeRoute():
     def __post_init__(self):
         if isinstance(self.TimeUpdated, str):
             self.TimeUpdated = parse_wcf_date(self.TimeUpdated)
-        for name in ["StartLocation", "EndLocation"]:
+        for name in ["StartPoint", "EndPoint"]:
             val = getattr(self, name, None)
             if isinstance(val, dict):
-                setattr(self, name, RoadwayLocation(**val)
-                        )  # pylint: disable=not-a-mapping
+                setattr(self, name, RoadwayLocation(**val))  # pylint: disable=not-a-mapping
+
+    @property
+    def __geo_interface__(self):
+        return get_multipoint_feature(self, "StartPointLongitude", "EndPointLongitude", "StartPointLatitude", "EndPointLatitude")
+
+
 
 
 @dataclass
@@ -578,8 +599,8 @@ class WeatherInfo():
 
     @property
     def __geo_interface__(self):
-        props = copy.deepcopy(self.__dict__)
-        x, y = map(lambda name: props.pop, ("Longitude", "Latitude"))
+        props = dict(flatten_dict(self))
+        x, y = map(props.pop, ("Longitude", "Latitude"), (None,)*2)
         geom = create_point_geo_interface(x, y)
         return {
             "type": "Feature",
@@ -632,12 +653,12 @@ class TollRate():
 
     @property
     def __geo_interface__(self):
-        props = copy.deepcopy(self.__dict__)
-        x1, y1, x2, y2 = map(lambda name: props.pop, (
-            "StartLongitude", "StartLatitude", "EndLongitude", "EndLatitude"))
+        props = dict(flatten_dict(self))
+        x1, y1, x2, y2 = map(props.pop, (
+            "StartLongitude", "StartLatitude", "EndLongitude", "EndLatitude"), (None,)*4)
         geom = {
             "type": "MultiPoint",
-            "coordinates": tuple(tuple(x1, y1), tuple(x2, y2))
+            "coordinates": ((x1, y1), (x2, y2))
         }
         return {
             "type": "Feature",

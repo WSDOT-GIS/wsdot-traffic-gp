@@ -7,11 +7,13 @@ import json
 import logging
 from argparse import ArgumentParser
 
+import geojson
+
 from . import (URLS, _DEFAULT_ACCESS_CODE,
                get_traveler_info, get_traveler_info_json,
                ENVIRONMENT_VAR_NAME)
-from .jsonhelpers import CustomEncoder, dict_list_to_geojson
 from .fielddetection import FieldInfo
+from .classes import TrafficJSONEncoder
 
 
 def _field_serializer(the_object):
@@ -25,6 +27,12 @@ OUTDIR = "output"
 
 logging.getLogger(__name__)
 
+class CustomGeoJSONEncoder(json.JSONEncoder):
+    def default(self, o): # pylint:disable=E0202
+        if "__geo_interface__" in dir(o):
+            return o.__geo_interface__
+        return super().default(o)
+
 
 def main():
     """Main function. Runs when called as a script.
@@ -34,6 +42,10 @@ def main():
     arg_parser.add_argument(
         "--raw", action="store_true",
         help="Dumps unprocessed JSON output from services")
+    arg_parser.add_argument(
+        "--geojson", action="store_true",
+        help="Exports to GeoJSON format"
+    )
     arg_parser.add_argument(
         "api_code", nargs="?",
         help="WSDOT Traveler API code. This parameter can be omitted if the %s environment variable is defined." % ENVIRONMENT_VAR_NAME)  # pylint:disable=line-too-long
@@ -53,24 +65,19 @@ def main():
         # Get the features via the API.
         features = get_traveler_info(endpoint_name, api_code)
         # Extract field definitions
-        fields = FieldInfo.from_features(features)
+
+        ext = "json"
+        if args.geojson:
+            ext = "geojson"
 
         # Write data and field info to JSON files.
-        out_path = os.path.join(OUTDIR, "%s.json" % endpoint_name)
+        out_path = os.path.join(OUTDIR, "%s.%s" % (endpoint_name, ext))
         with open(out_path, 'w') as json_file:
-            json.dump(
-                features, json_file, cls=CustomEncoder, indent=True)
-        out_path = os.path.join(OUTDIR, "%s_fields.json" % endpoint_name)
-        with open(out_path, 'w') as json_file:
-            json.dump(
-                fields, json_file, indent=True, default=_field_serializer)
-
-        # dump geojson
-        geojson = dict_list_to_geojson(features)
-        out_path = os.path.join(OUTDIR, "%s.geojson" % endpoint_name)
-        with open(out_path, 'w') as json_file:
-            json.dump(
-                geojson, json_file, cls=CustomEncoder, indent=True)
+            if args.geojson:
+                # geojson.dump(features, json_file, indent=True)
+                json.dump(features, json_file, cls=CustomGeoJSONEncoder, indent=True)
+            else:
+                json.dump(features, json_file, cls=TrafficJSONEncoder, indent=True)
 
 
 if __name__ == '__main__':

@@ -11,16 +11,10 @@ import re
 import sys
 from sys import version_info
 
-from .jsonhelpers import CustomEncoder, parse_traveler_info_object
+import requests
 from .resturls import URLS
+from .classes import TrafficJSONEncoder, parse
 
-# Choose correct library for Python version
-if version_info.major <= 2:
-    # pylint:disable=import-error,unused-import
-    from urllib2 import urlopen, HTTPError, Request
-else:
-    from urllib.request import urlopen, Request
-    from urllib.error import HTTPError
 
 # Get default access code
 ENVIRONMENT_VAR_NAME = "WSDOT_TRAFFIC_API_CODE"
@@ -30,7 +24,7 @@ else:
     _DEFAULT_ACCESS_CODE = None
 
 
-_NO_CODE_MESSAGE = "No access code provided. Must be provided either by parameter or WSDOT_TRAFFIC_API_CODE environment variable." # pylint:disable=line-too-long
+_NO_CODE_MESSAGE = "No access code provided. Must be provided either by parameter or WSDOT_TRAFFIC_API_CODE environment variable."  # pylint:disable=line-too-long
 
 
 def get_traveler_info_json(dataname, accesscode=_DEFAULT_ACCESS_CODE):
@@ -49,9 +43,9 @@ def get_traveler_info_json(dataname, accesscode=_DEFAULT_ACCESS_CODE):
             accesscode = _DEFAULT_ACCESS_CODE
         else:
             raise TypeError(_NO_CODE_MESSAGE)
-    url = "%s?AccessCode=%s" % (URLS[dataname], accesscode)
-    with urlopen(url) as json_file:
-        output = json_file.read()
+    url = URLS[dataname]
+    with requests.get(url, {"AccessCode": accesscode}) as json_file:
+        output = json_file.text()
     return output
 
 
@@ -68,12 +62,9 @@ def get_traveler_info(dataname, accesscode=_DEFAULT_ACCESS_CODE):
     """
     if not accesscode:
         raise TypeError(_NO_CODE_MESSAGE)
-    url = "%s?AccessCode=%s" % (URLS[dataname], accesscode)
-    json_response = urlopen(url)
-    json_txt = json_response.read()
-    if not isinstance(json_txt, str):
-        json_txt = str(json_txt, "utf-8")
-    json_data = json.loads(json_txt,
-                           object_hook=parse_traveler_info_object)
+    url = URLS[dataname]
+    json_data = None
+    with requests.get(url, {"AccessCode": accesscode}) as json_response:
+        json_data = json_response.json(object_hook=parse)
     del json_response
     return json_data
