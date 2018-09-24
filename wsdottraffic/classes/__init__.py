@@ -7,9 +7,101 @@ from dataclasses import dataclass, asdict
 import enum
 import uuid
 import json
-from typing import Sequence, Tuple
+from typing import Sequence, Tuple, ClassVar
 from ..parseutils import parse_wcf_date
 from ..dicttools import flatten_dict
+
+CoorPair = Tuple[float, float]
+
+def _get_coord_pairs(o: object, *coord_fields: str) -> CoorPair or Tuple[CoorPair]:
+    # Get the number of provided field names.
+    field_count = len(coord_fields)
+    # Reduce count by one if there is an odd number of field names.
+    if field_count % 2 != 0:
+        field_count -= 1
+    output = []
+    i = 0  # initialize counter.
+    while i < field_count:
+        x, y = tuple(map(getattr, (o,)*2, coord_fields[i:i+2], (None,)*2))
+        if not isinstance(x, float) or not isinstance(y, float):
+            raise TypeError("Non-numeric value: %s." % ((x, y),))
+        if x is not None and y is not None:
+            output.append((x, y))
+        i += 2
+    if not output:
+        return None
+    return tuple(output)
+
+
+def make_geo_interface(o: object, *coord_fields: str, id_field: str = None) -> dict:
+    """Creates a __geo_interface__ dict using object properties.
+
+    See https://gist.github.com/sgillies/2217756
+
+    Args:
+        o: The object that is being converted into a __geo_interface__ dict.
+        coord_fields: the names of two or more fields that contain coordinate values.
+            The names in even-numbered positions are X values, odd are Y.
+        id_field: The name of the field that provides a unique str or int identifier.
+            This becomes the dict's "id" value if provided.
+
+    Returns:
+        Returns a dict that implements __geo_interface__.
+    """
+    default_coord_fields = ("Longitude", "Latitude")
+    if not coord_fields and ("Longitude" and "Latitude") in o.__annotations__:
+        coord_fields = default_coord_fields
+    if not coord_fields:
+        raise TypeError("No coord_fields were provided")
+
+    field_count = len(coord_fields)
+    if field_count < 2:
+        raise ValueError("coord_fields must have at least two values")
+
+    # If there are an odd number of fields, remove the last one.
+    if field_count % 2 != 0:
+        coord_fields = coord_fields[0:-1]
+
+    # Get the coordinates
+    coords: Tuple[float, float] or Tuple[Tuple[float, float]]
+    if len(coord_fields) <= 3:
+        coords = tuple(map(getattr, (o,)*2, coord_fields[0:2], (None,)*2))
+    else:
+        coords = _get_coord_pairs(o, *coord_fields)
+
+    # Create the dict for "properties" and remove the coordinate fields.
+    props = dict(flatten_dict(o, json_safe=True))
+    for prop_name in coord_fields:
+        props.pop(prop_name, None)
+
+    # Get the "id", removing from props if provided.
+    _id: str or int = None
+    if id_field is not None:
+        _id = props.pop(id_field, None)
+
+    if coords:
+        geometry = {
+            "coordinates": coords
+        }
+        if len(coord_fields) > 2:
+            geometry["type"] = "MultiPoint"
+        else:
+            geometry["type"] = "Point"
+    else:
+        geometry = None
+
+
+
+    output = {
+        "type": "Feature",
+        "properties": props,
+        "geometry": geometry
+    }
+
+    if _id is not None:
+        output["id"] = _id
+
+    return output
 
 
 def create_point_geo_interface(x: float, y: float) -> dict:
@@ -256,7 +348,8 @@ class CVRestrictionData():
         for name in ("StartRoadwayLocation", "EndRoadwayLocation"):
             val = getattr(self, name, None)
             if val is not None and not isinstance(val, RoadwayLocation):
-                setattr(self, name, RoadwayLocation(**val))  # pylint: disable=not-a-mapping
+                setattr(self, name, RoadwayLocation(**val)
+                        )  # pylint: disable=not-a-mapping
         for name in ("DatePosted", "DateEffective", "DateExpires"):
             val = getattr(self, name, None)
             if isinstance(val, str):
@@ -268,7 +361,7 @@ class CVRestrictionData():
         x, y = map(props.pop, ("Longitude", "Latitude"), (None,)*2)
         geom = {
             "type": "Point",
-            "coordinates": (x,y)
+            "coordinates": (x, y)
         }
         return {
             "type": "Feature",
@@ -449,9 +542,11 @@ class PassCondition():
         if isinstance(self.DateUpdated, str):
             self.DateUpdated = parse_wcf_date(self.DateUpdated)
         if not isinstance(self.RestrictionOne, TravelRestriction):
-            self.RestrictionOne = TravelRestriction(**self.RestrictionOne)  # pylint:disable=not-a-mapping
+            self.RestrictionOne = TravelRestriction(
+                **self.RestrictionOne)  # pylint:disable=not-a-mapping
         if not isinstance(self.RestrictionTwo, TravelRestriction):
-            self.RestrictionTwo = TravelRestriction(**self.RestrictionTwo)  # pylint:disable=not-a-mapping
+            self.RestrictionTwo = TravelRestriction(
+                **self.RestrictionTwo)  # pylint:disable=not-a-mapping
 
     @property
     def __geo_interface__(self):
@@ -513,7 +608,7 @@ class FlowData():
             self.Time = parse_wcf_date(self.Time)
         if not isinstance(self.FlowStationLocation, RoadwayLocation):
             self.FlowStationLocation = RoadwayLocation(
-                **self.FlowStationLocation) # pylint: disable=not-a-mapping
+                **self.FlowStationLocation)  # pylint: disable=not-a-mapping
         if not isinstance(self.FlowReadingValue, FlowStationReading):
             self.FlowReadingValue = FlowStationReading(self.FlowReadingValue)
 
@@ -554,13 +649,27 @@ class TravelTimeRoute():
         for name in ["StartPoint", "EndPoint"]:
             val = getattr(self, name, None)
             if isinstance(val, dict):
-                setattr(self, name, RoadwayLocation(**val)) # pylint: disable=not-a-mapping
+                # pylint: disable=not-a-mapping
+                setattr(self, name, RoadwayLocation(**val))
 
     @property
     def __geo_interface__(self):
         return get_multipoint_feature(
             self, ("StartPointLongitude", "EndPointLongitude"),
             ("StartPointLatitude", "EndPointLatitude"))
+
+@dataclass
+class WeatherStation():
+    """Weather Station
+    """
+    StationCode: int
+    StationName: str
+    Longitude: float
+    Latitude: float
+
+    @property
+    def __geo_interface__(self):
+        return make_geo_interface(self, id_field="StationCode")
 
 
 @dataclass
@@ -573,9 +682,9 @@ class WeatherInfo():
 
     StationName: str
 
-    Latitude: float = None
+    Latitude: float
 
-    Longitude: float = None
+    Longitude: float
 
     ReadingTime: datetime.datetime = None
 
@@ -605,18 +714,12 @@ class WeatherInfo():
 
     @property
     def __geo_interface__(self):
-        props = dict(flatten_dict(self))
-        x, y = map(props.pop, ("Longitude", "Latitude"), (None,)*2)
-        geom = create_point_geo_interface(x, y)
-        return {
-            "type": "Feature",
-            "properties": props,
-            "geometry": geom
-        }
+        return make_geo_interface(self, id_field="StationID")
 
 
 @dataclass
 class TollRate():
+    # pylint:disable=line-too-long
     """Toll rate
 
     See https://www.wsdot.wa.gov/Traffic/api/Documentation/class_traveler_a_p_i_1_1_models_1_1_toll_rate.html
@@ -640,7 +743,6 @@ class TollRate():
         StateRoute: Route the toll applies to
         TravelDirection: Travel direction the toll applies to
         TripName: Name for the toll trip
-
     """
     SignName: str = None
     TripName: str = None
@@ -696,6 +798,8 @@ def parse(dct: dict):
         return TravelTimeRoute(**dct)
     if "StationID" in dct:
         return WeatherInfo(**dct)
+    if "StationCode" in dct:
+        return WeatherStation(**dct)
     if "CurrentToll" in dct:
         return TollRate(**dct)
     return dct
@@ -715,6 +819,8 @@ class TrafficJSONEncoder(json.JSONEncoder):
             return o.isoformat()
         if isinstance(o, uuid.UUID):
             return str(o)
-        if not isinstance(o, (BorderCrossingData, BridgeDataGIS, CVRestrictionData, Alert, Camera, PassCondition, FlowData, TravelTimeRoute, WeatherInfo, TollRate, RoadwayLocation)):
+        if not isinstance(o, (
+                BorderCrossingData, BridgeDataGIS, CVRestrictionData, Alert, Camera,
+                PassCondition, FlowData, TravelTimeRoute, WeatherInfo, TollRate, RoadwayLocation)):
             return super().default(o)
         return o.__dict__
