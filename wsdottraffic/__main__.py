@@ -27,11 +27,11 @@ OUTDIR = "output"
 
 logging.getLogger(__name__)
 
-class CustomGeoJSONEncoder(json.JSONEncoder):
-    def default(self, o): # pylint:disable=method-hidden
-        if "__geo_interface__" in dir(o):
-            return o.__geo_interface__
-        return super().default(o)
+# class CustomGeoJSONEncoder(json.JSONEncoder):
+#     def default(self, o): # pylint:disable=method-hidden
+#         if "__geo_interface__" in dir(o):
+#             return o.__geo_interface__
+#         return super().default(o)
 
 
 def main():
