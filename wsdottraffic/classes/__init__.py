@@ -8,6 +8,7 @@ import enum
 import uuid
 import json
 from typing import Sequence, Tuple, ClassVar
+import dateutil.parser
 from ..parseutils import parse_wcf_date
 from ..dicttools import flatten_dict
 
@@ -348,8 +349,8 @@ class CVRestrictionData():
         for name in ("StartRoadwayLocation", "EndRoadwayLocation"):
             val = getattr(self, name, None)
             if val is not None and not isinstance(val, RoadwayLocation):
-                setattr(self, name, RoadwayLocation(**val)
-                        )  # pylint: disable=not-a-mapping
+                # pylint: disable=not-a-mapping
+                setattr(self, name, RoadwayLocation(**val))
         for name in ("DatePosted", "DateEffective", "DateExpires"):
             val = getattr(self, name, None)
             if isinstance(val, str):
@@ -774,6 +775,134 @@ class TollRate():
             "geometry": geom
         }
 
+@dataclass
+class SurfaceMeasurements():
+    """Surface Measurement
+
+    Attributes:
+        SensorId: byte
+        SurfaceTemperature: decimal
+        RoadFreezingTemperature: decimal
+        RoadSurfaceCondition: int
+    """
+    SensorId: int
+    SurfaceTemperature: float
+    RoadFreezingTemperature: float
+    RoadSurfaceCondition: int
+
+@dataclass
+class SubSurfaceMeasurements():
+    """Sub-Surface Measurement
+
+    Attributes:
+        SensorId: byte
+        SubSurfaceTemperature: decimal
+    """
+    SensorId: int
+    SubSurfaceTemperature: float
+
+
+@dataclass
+class WeatherReading():
+    """Scanweb Weather Reading
+
+    Attributes:
+        StationId: string
+        StationName: string
+        Latitude: decimal
+        Longitude: decimal
+        Elevation: int
+        ReadingTime: DateTime
+        AirTemperature: decimal
+        RelativeHumidty: byte
+        AverageWindSpeed: byte
+        AverageWindDirection: short
+        WindGust: byte
+        Visibility: short
+        PrecipitationIntensity: byte
+        PrecipitationType: byte
+        PrecipitationPast1Hour: decimal
+        PrecipitationPast3Hours: decimal
+        PrecipitationPast6Hours: decimal
+        PrecipitationPast12Hours: decimal
+        PrecipitationPast24Hours: decimal
+        PrecipitationAccumulation: decimal
+        BarometricPressure: int
+        SnowDepth: int
+        SurfaceMeasurements: Sequence[ScanwebSurfaceMeasurements]
+        SubSurfaceMeasurements: Sequence[ScanwebSubSurfaceMeasurements]
+    """
+
+    StationId: str = None
+    StationName: str = None
+    Latitude: float = None
+    Longitude: float = None
+    Elevation: int = None
+    ReadingTime: datetime.datetime = None
+    AirTemperature: float = None
+    RelativeHumidty: int = None
+    AverageWindSpeed: int = None
+    AverageWindDirection: int = None
+    WindGust: int = None
+    Visibility: int = None
+    PrecipitationIntensity: int = None
+    PrecipitationType: int = None
+    PrecipitationPast1Hour: float = None
+    PrecipitationPast3Hours: float = None
+    PrecipitationPast6Hours: float = None
+    PrecipitationPast12Hours: float = None
+    PrecipitationPast24Hours: float = None
+    PrecipitationAccumulation: float = None
+    BarometricPressure: int = None
+    SnowDepth: int = None
+    SurfaceMeasurements: Sequence[SurfaceMeasurements] = None
+    SubSurfaceMeasurements: Sequence[SubSurfaceMeasurements] = None
+
+    def __post_init__(self):
+        """Scanweb Weather Reading
+
+        Args:
+            StationId: string
+            StationName: string
+            Latitude: decimal
+            Longitude: decimal
+            Elevation: int
+            ReadingTime: DateTime
+            AirTemperature: decimal
+            RelativeHumidty: byte
+            AverageWindSpeed: byte
+            AverageWindDirection: short
+            WindGust: byte
+            Visibility: short
+            PrecipitationIntensity: byte
+            PrecipitationType: byte
+            PrecipitationPast1Hour: decimal
+            PrecipitationPast3Hours: decimal
+            PrecipitationPast6Hours: decimal
+            PrecipitationPast12Hours: decimal
+            PrecipitationPast24Hours: decimal
+            PrecipitationAccumulation: decimal
+            BarometricPressure: int
+            SnowDepth: int
+            SurfaceMeasurements: Sequence[ScanwebSurfaceMeasurements]
+            SubSurfaceMeasurements: Sequence[ScanwebSubSurfaceMeasurements]
+        """
+        if isinstance(self.ReadingTime, str):
+            self.ReadingTime = dateutil.parser.parse(self.ReadingTime)
+
+        ctor: SurfaceMeasurements or SubSurfaceMeasurements = None
+        for attrib_name in ("SurfaceMeasurements", "SubSurfaceMeasurements"):
+            new_list = getattr(self, attrib_name, None)
+            if new_list is None:
+                continue
+
+            if attrib_name == "SurfaceMeasurements":
+                ctor = SurfaceMeasurements
+            else:
+                ctor = SubSurfaceMeasurements
+
+            new_list = tuple(map(lambda item: ctor(**item), new_list))
+            setattr(self, attrib_name, new_list)
 
 def parse(dct: dict):
     """Specialized JSON parsing for wsdottraffic.classes classes.
@@ -802,6 +931,8 @@ def parse(dct: dict):
         return WeatherStation(**dct)
     if "CurrentToll" in dct:
         return TollRate(**dct)
+    if "StationId" in dct:
+        return WeatherReading(**dct)
     return dct
 
 
@@ -820,7 +951,8 @@ class TrafficJSONEncoder(json.JSONEncoder):
         if isinstance(o, uuid.UUID):
             return str(o)
         if not isinstance(o, (
-                BorderCrossingData, BridgeDataGIS, CVRestrictionData, Alert, Camera,
+                BorderCrossingData, BridgeDataGIS, CVRestrictionData, Alert, Camera, TravelRestriction,
+                WeatherStation, SurfaceMeasurements, SubSurfaceMeasurements, WeatherReading,
                 PassCondition, FlowData, TravelTimeRoute, WeatherInfo, TollRate, RoadwayLocation)):
             return super().default(o)
         return o.__dict__
