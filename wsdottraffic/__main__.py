@@ -2,6 +2,7 @@
 Returns data from the WSDOT Traveler Info REST endpoints.
 '''
 from __future__ import unicode_literals, absolute_import, print_function, division
+import sys
 import os
 import json
 import logging
@@ -75,8 +76,12 @@ def main():
         with open(out_path, 'w') as json_file:
             if args.geojson:
                 feature_collection = geojson.factory.FeatureCollection(features)
-                geojson.dump(feature_collection, json_file, indent=True)
-                # json.dump(features, json_file, cls=CustomGeoJSONEncoder, indent=True)
+                try:
+                    geojson.dump(feature_collection, json_file, indent=True)
+                    # json.dump(features, json_file, cls=CustomGeoJSONEncoder, indent=True)
+                except:
+                    print("Error dumping %s" % endpoint_name, file=sys.stderr)
+                    raise
             else:
                 json.dump(features, json_file, cls=TrafficJSONEncoder, indent=True)
 

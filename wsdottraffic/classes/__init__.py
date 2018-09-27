@@ -14,6 +14,7 @@ from ..dicttools import flatten_dict
 
 CoorPair = Tuple[float, float]
 
+
 def _get_coord_pairs(o: object, *coord_fields: str) -> CoorPair or Tuple[CoorPair]:
     # Get the number of provided field names.
     field_count = len(coord_fields)
@@ -90,8 +91,6 @@ def make_geo_interface(o: object, *coord_fields: str, id_field: str = None) -> d
             geometry["type"] = "Point"
     else:
         geometry = None
-
-
 
     output = {
         "type": "Feature",
@@ -659,6 +658,7 @@ class TravelTimeRoute():
             self, ("StartPointLongitude", "EndPointLongitude"),
             ("StartPointLatitude", "EndPointLatitude"))
 
+
 @dataclass
 class WeatherStation():
     """Weather Station
@@ -775,6 +775,7 @@ class TollRate():
             "geometry": geom
         }
 
+
 @dataclass
 class SurfaceMeasurements():
     """Surface Measurement
@@ -789,6 +790,7 @@ class SurfaceMeasurements():
     SurfaceTemperature: float
     RoadFreezingTemperature: float
     RoadSurfaceCondition: int
+
 
 @dataclass
 class SubSurfaceMeasurements():
@@ -904,6 +906,35 @@ class WeatherReading():
             new_list = tuple(map(lambda item: ctor(**item), new_list))
             setattr(self, attrib_name, new_list)
 
+    def __geo_interface__(self):
+        # Create feature properties dict.
+        props = asdict(self)
+        # Remove the X and Y coordinates from properties
+        x = props.pop("Longitude")
+        y = props.pop("Latitude")
+        # Create geometry from x and y
+        geometry = create_point_geo_interface(x, y)
+        # get feature ID
+        _id = props.pop("StationId")
+
+        # TODO: Convert SurfaceMeasurements and SubSurfaceMeasurements
+        # to value compatible with GeoJSON property.
+        for attrib_name in ("SurfaceMeasurements", "SubSurfaceMeasurements"):
+            val = props.pop(attrib_name, None)
+            if not val:
+                continue
+            val = map(asdict, val)
+            val = json.dumps(val)
+            props[attrib_name] = val
+
+        return {
+            "id": _id,
+            "type": "Feature",
+            "properties": props,
+            "geometry": geometry
+        }
+
+
 def parse(dct: dict):
     """Specialized JSON parsing for wsdottraffic.classes classes.
     For use with the json.load and json.loads object_hook parameter.
@@ -951,8 +982,21 @@ class TrafficJSONEncoder(json.JSONEncoder):
         if isinstance(o, uuid.UUID):
             return str(o)
         if not isinstance(o, (
-                BorderCrossingData, BridgeDataGIS, CVRestrictionData, Alert, Camera, TravelRestriction,
-                WeatherStation, SurfaceMeasurements, SubSurfaceMeasurements, WeatherReading,
-                PassCondition, FlowData, TravelTimeRoute, WeatherInfo, TollRate, RoadwayLocation)):
+                BorderCrossingData,
+                BridgeDataGIS,
+                CVRestrictionData,
+                Alert,
+                Camera,
+                TravelRestriction,
+                WeatherStation,
+                WeatherReading,
+                SurfaceMeasurements,
+                SubSurfaceMeasurements,
+                PassCondition,
+                FlowData,
+                TravelTimeRoute,
+                WeatherInfo,
+                TollRate,
+                RoadwayLocation)):
             return super().default(o)
         return o.__dict__
